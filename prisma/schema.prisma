@@ -40,6 +40,8 @@ model Food {
   price Int
   restaurantID Int
   restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  // unused
+  pictureURL String @default("")
   // many-to-many
   addons FoodAddonCategory[]
   menuCategories MenuCategory[]
