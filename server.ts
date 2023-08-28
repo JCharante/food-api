@@ -410,7 +410,8 @@ const appRouter = router({
                 en: z.string(),
                 vi: z.string()
             })),
-            price: z.optional(z.number())
+            price: z.optional(z.number()),
+            addons: z.optional(z.array(z.string()))
         }))
         .mutation(async ({ ctx, input }) => {
             await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
@@ -433,6 +434,24 @@ const appRouter = router({
             }
             if (input.price !== undefined) {
                 foodItem.price = input.price
+            }
+            if (input.addons) {
+                // deduplicate the addons list
+                input.addons = [...new Set(input.addons)]
+                // make sure all given values exist and belong to restaurant
+                const addons = await FoodItemAddonCategoryV1.find({
+                    _id: {
+                        $in: input.addons.map(id => new mongoose.Types.ObjectId(id))
+                    },
+                    restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+                })
+                if (addons.length !== input.addons.length) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'addons: Addon Category not found'
+                    })
+                }
+                foodItem.addons = input.addons.map(id => new mongoose.Types.ObjectId(id))
             }
             await foodItem.save()
         }),

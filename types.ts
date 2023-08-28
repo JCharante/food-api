@@ -50,7 +50,7 @@ export interface IFoodItemV1 {
     price: number
     inStock: boolean
     visible: boolean
-    addons: [mongoose.Types.ObjectId]
+    addons: mongoose.Types.ObjectId[]
     pictureID?: string
 }
 
