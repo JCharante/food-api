@@ -75,6 +75,7 @@ import {
 import { z } from 'zod'
 import { requireIsRestaurantOwnerWrapperTRPC } from './wrappers'
 import mongoose from 'mongoose'
+import {log} from "util";
 
 export async function createContext ({
     req,
@@ -443,6 +444,17 @@ const appRouter = router({
             }
 
             category.save()
+        }),
+    deleteMenuCategory: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            categoryID: z.string()
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            await MenuCategoryV1.deleteOne({ _id: new mongoose.Types.ObjectId(input.categoryID) })
         }),
     getRestaurantFoodItems: loggedInProcedure
         .input(z.object({
