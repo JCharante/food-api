@@ -553,7 +553,25 @@ const appRouter = router({
             await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
             await MongoDBSingleton.getInstance()
             const foodItems = await FoodItemV1.find({ restaurant: input.restaurantID })
-            return JSON.parse(JSON.stringify(foodItems))
+            const foodItemsWithPictures = await Promise.all(foodItems.map(async (food) => {
+                const ret = {
+                    ...food.toObject({ flattenMaps: true }),
+                    pictureURL: "https://placekitten.com/250/250"
+                }
+                if (await s3.resourceExists(input.restaurantID, 'food', food._id.toString())) {
+                    ret.pictureURL = await s3.generatePresignedGetURL(input.restaurantID, 'food', food._id.toString())
+                }
+                return ret
+            }))
+            const sanitized = foodItemsWithPictures.map((food) => {
+                return {
+                    ...food,
+                    _id: food._id.toString(),
+                    addons: food.addons.map((v) => v.toString()),
+                    restaurant: food.restaurant.toString()
+                }
+            })
+            return sanitized
         }),
     getRestaurantFoodAddons: loggedInProcedure
         .input(z.object({
