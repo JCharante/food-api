@@ -222,7 +222,6 @@ export const getRestaurants = async (req: express.Request, res: express.Response
                 restaurants = await RestaurantV1
                     .find({ isVisible: true, isVerified: true, hiddenByAdmin: false })
                     .sort({ name: 'asc' })
-                    .populate('menu')
                     .populate('openDuring')
 
                 res.status(200).send(restaurants)
