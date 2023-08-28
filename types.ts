@@ -28,6 +28,8 @@ export interface IFoodItemAddonV1 {
     restaurant: mongoose.Types.ObjectId
     price: number
     pictureID?: string
+    visible: boolean
+    inStock: boolean
 }
 
 export interface IFoodItemAddonCategoryV1 {

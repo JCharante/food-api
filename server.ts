@@ -61,7 +61,17 @@ import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import * as trpcExpress from '@trpc/server/adapters/express'
 
-import { FoodItemV1, MenuCategoryV1, MenuV1, MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1 } from './database'
+import {
+    FoodItemAddonCategoryV1,
+    FoodItemAddonV1,
+    FoodItemV1,
+    MenuCategoryV1,
+    MenuV1,
+    MongoDBSingleton,
+    RestaurantV1,
+    SessionKeyV1,
+    UserV1
+} from './database'
 import { z } from 'zod'
 import { requireIsRestaurantOwnerWrapperTRPC } from './wrappers'
 import mongoose from 'mongoose'
@@ -197,6 +207,134 @@ const appRouter = router({
 
             await foodItem.save()
         }),
+    createRestaurantFoodAddon: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            names: z.object({
+                en: z.string(),
+                vi: z.string()
+            }),
+            descriptions: z.object({
+                en: z.string(),
+                vi: z.string()
+            }),
+            price: z.number(),
+            inStock: z.boolean(),
+            visible: z.boolean()
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            const addon = new FoodItemAddonV1({
+                restaurant: new mongoose.Types.ObjectId(input.restaurantID),
+                names: input.names,
+                descriptions: input.descriptions,
+                price: input.price,
+                inStock: input.inStock,
+                visible: input.visible
+            })
+
+            await addon.save()
+        }),
+    createRestaurantFoodAddonCategory: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            names: z.object({
+                en: z.string(),
+                vi: z.string()
+            }),
+            type: z.enum(['multipleChoice', 'pickOne'])
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            const addonCategory = new FoodItemAddonCategoryV1({
+                restaurant: new mongoose.Types.ObjectId(input.restaurantID),
+                names: input.names,
+                type: input.type,
+                addons: []
+            })
+
+            await addonCategory.save()
+        }),
+    patchRestaurantFoodAddonCategory: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            addonCategoryID: z.string(),
+            names: z.optional(z.object({
+                en: z.string(),
+                vi: z.string()
+            })),
+            type: z.optional(z.enum(['multipleChoice', 'pickOne'])),
+            pickOneRequiresSelection: z.optional(z.boolean()),
+            pickOneDefaultValue: z.optional(z.string()),
+            addons: z.optional(z.array(z.string()))
+
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            const addonCategory = await FoodItemAddonCategoryV1.findOne({
+                _id: new mongoose.Types.ObjectId(input.addonCategoryID),
+                restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+            })
+
+            if (!addonCategory) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'Addon category not found'
+                })
+            }
+
+            if (input.names) {
+                addonCategory.names = input.names
+            }
+
+            if (input.type) {
+                addonCategory.type = input.type
+            }
+
+            if (input.pickOneRequiresSelection) {
+                addonCategory.pickOneRequiresSelection = input.pickOneRequiresSelection
+            }
+
+            if (input.pickOneDefaultValue) {
+                // make sure given value exists and belongs to restaurant
+                const addon = await FoodItemAddonV1.findOne({
+                    _id: new mongoose.Types.ObjectId(input.pickOneDefaultValue),
+                    restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+                })
+                if (!addon) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'pickOneDefaultValue: Addon not found'
+                    })
+                }
+                addonCategory.pickOneDefaultValue = new mongoose.Types.ObjectId(input.pickOneDefaultValue)
+            }
+
+            if (input.addons) {
+                // make sure all given values exist and belong to restaurant
+                const addons = await FoodItemAddonV1.find({
+                    _id: {
+                        $in: input.addons.map(id => new mongoose.Types.ObjectId(id))
+                    },
+                    restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+                })
+                if (addons.length !== input.addons.length) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'addons: Addon not found'
+                    })
+                }
+                addonCategory.addons = input.addons.map(id => new mongoose.Types.ObjectId(id))
+            }
+
+            await addonCategory.save()
+        }),
     patchRestaurantFoodItem: loggedInProcedure
         .input(z.object({
             restaurantID: z.string(),
@@ -312,6 +450,26 @@ const appRouter = router({
             await MongoDBSingleton.getInstance()
             const foodItems = await FoodItemV1.find({ restaurant: input.restaurantID })
             return JSON.parse(JSON.stringify(foodItems))
+        }),
+    getRestaurantFoodAddons: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string()
+        }))
+        .query(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+            const addons = await FoodItemAddonV1.find({ restaurant: input.restaurantID })
+            return JSON.parse(JSON.stringify(addons))
+        }),
+    getRestaurantAddonCategories: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string()
+        }))
+        .query(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+            const categories = await FoodItemAddonCategoryV1.find({ restaurant: input.restaurantID }).populate('addons')
+            return JSON.parse(JSON.stringify(categories))
         })
 })
 

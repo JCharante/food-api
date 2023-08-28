@@ -57,7 +57,9 @@ export const FoodItemAddonV1Schema = new Schema<IFoodItemAddonV1>({
     descriptions: { type: Map, of: String },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     price: { type: Number, required: true },
-    pictureID: { type: String }
+    pictureID: { type: String },
+    visible: { type: Boolean, required: true },
+    inStock: { type: Boolean, required: true }
 })
 
 export const FoodItemAddonV1 = model<IFoodItemAddonV1>('FoodItemAddonV1', FoodItemAddonV1Schema)
