@@ -57,14 +57,13 @@ import express from 'express'
 // app.listen(3000, '0.0.0.0', () => {
 //     console.log('The application is listening on port 3000!')
 // })
-import {inferAsyncReturnType, initTRPC, TRPCError} from '@trpc/server'
+import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import * as trpcExpress from '@trpc/server/adapters/express'
 
-import {FoodItemV1, MenuCategoryV1, MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1} from './database'
-import {IRestaurantV1} from './types'
-import {z} from 'zod'
-import {requireIsRestaurantOwnerWrapperTRPC} from './wrappers'
+import { FoodItemV1, MenuCategoryV1, MenuV1, MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1 } from './database'
+import { z } from 'zod'
+import { requireIsRestaurantOwnerWrapperTRPC } from './wrappers'
 import mongoose from 'mongoose'
 
 export async function createContext ({
@@ -134,7 +133,7 @@ const appRouter = router({
     userGetRestaurants: loggedInProcedure.query(async ({ ctx }) => {
         const { user } = ctx
         await MongoDBSingleton.getInstance()
-        const restaurants: IRestaurantV1[] = await RestaurantV1.find({ owner: user._id })
+        const restaurants = await RestaurantV1.find({ owner: user._id }).populate('menu')
         return JSON.parse(JSON.stringify(restaurants))
     }),
     getRestaurantCategories: loggedInProcedure
@@ -235,6 +234,29 @@ const appRouter = router({
                 foodItem.price = input.price
             }
             await foodItem.save()
+        }),
+    patchRestaurantMenu: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            menuID: z.string(),
+            categories: z.array(z.string())
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+            // find menu by menuID
+            const menu = await MenuV1.findOne({
+                _id: new mongoose.Types.ObjectId(input.menuID),
+                restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+            })
+            if (!menu) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'Menu not found'
+                })
+            }
+            menu.categories = input.categories.map((id) => new mongoose.Types.ObjectId(id))
+            await menu.save()
         }),
     getRestaurantFoodItems: loggedInProcedure
         .input(z.object({
