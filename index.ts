@@ -20,7 +20,8 @@ interface IUserV1 {
     name: string,
     email?: string,
     phone?: string,
-    password?: string
+    password?: string,
+    isAlsoMerchant: boolean,
 }
 
 const UserV1Schema = new Schema<IUserV1>({
@@ -29,7 +30,8 @@ const UserV1Schema = new Schema<IUserV1>({
     name: { type: String, required: true },
     email: { type: String },
     phone: { type: String },
-    password: { type: String }
+    password: { type: String },
+    isAlsoMerchant: { type: Boolean, required: true, default: false },
 });
 
 const UserV1 = model<IUserV1>('UserV1', UserV1Schema);
@@ -46,6 +48,201 @@ const SessionKeyV1Schema = new Schema<ISessionKeyV1>({
 })
 
 const SessionKeyV1 = model<ISessionKeyV1>('SessionKeyV1', SessionKeyV1Schema)
+
+interface IFoodItemAddonV1 {
+    _id: mongoose.Types.ObjectId,
+    name: string,
+    englishName?: string,
+    description: string,
+    englishDescription?: string,
+    restaurant: mongoose.Types.ObjectId,
+    price: number,
+    pictureID?: string
+}
+
+const FoodItemAddonV1Schema = new Schema<IFoodItemAddonV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    englishName: { type: String },
+    description: { type: String },
+    englishDescription: { type: String },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    price: { type: Number, required: true },
+    pictureID: { type: String }
+})
+
+const FoodItemAddonV1 = model<IFoodItemAddonV1>('FoodItemAddonV1', FoodItemAddonV1Schema)
+
+interface IFoodItemAddonCategoryV1 {
+    _id: mongoose.Types.ObjectId,
+    name: string,
+    englishName?: string,
+    restaurant: mongoose.Types.ObjectId,
+    type: string,
+    addons: mongoose.Types.ObjectId[],
+    pickOneRequiresSelect?: boolean,
+    pickOneDefaultValue?: mongoose.Types.ObjectId,
+}
+
+const FoodItemAddonCategoryV1Schema = new Schema<IFoodItemAddonCategoryV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    englishName: { type: String },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    type: { type: String, required: true },
+    addons: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemAddonV1' },
+    pickOneRequiresSelect: { type: Boolean },
+    pickOneDefaultValue: { type: mongoose.SchemaTypes.ObjectId}
+})
+
+const FoodItemAddonCategoryV1 = model<IFoodItemAddonCategoryV1>('FoodItemAddonCategoryV1', FoodItemAddonCategoryV1Schema)
+
+interface IFoodItemV1 {
+    _id: mongoose.Types.ObjectId,
+    name: string,
+    englishName?: string,
+    description: string,
+    englishDescription?: string,
+    restaurant: mongoose.Types.ObjectId,
+    price: number,
+    inStock: boolean,
+    visible: boolean,
+    addons: [mongoose.Types.ObjectId],
+    pictureID?: string
+}
+
+const FoodItemV1Schema = new Schema<IFoodItemV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    englishName: { type: String },
+    description: { type: String },
+    englishDescription: { type: String },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    price: { type: Number, required: true },
+    inStock: { type: Boolean, required: true },
+    visible: { type: Boolean, required: true },
+    addons: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemAddonCategoryV1' },
+    pictureID: { type: String }
+})
+
+const FoodItemV1 = model<IFoodItemV1>('FoodItemV1', FoodItemV1Schema)
+
+interface IAvailabilityZoneV1 {
+    _id: mongoose.Types.ObjectId,
+    restaurant: mongoose.Types.ObjectId,
+    name: string,
+    startHour: number,
+    startMinute: number,
+    endHour: number,
+    endMinute: number,
+    daysOfWeek: number[],
+}
+
+const AvailabilityZoneV1Schema = new Schema<IAvailabilityZoneV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    startHour: { type: Number, required: true },
+    startMinute: { type: Number, required: true },
+    endHour: { type: Number, required: true },
+    endMinute: { type: Number, required: true },
+    daysOfWeek: { type: [Number], required: true }
+})
+
+const AvailabilityZoneV1 = model<IAvailabilityZoneV1>('AvailabilityZoneV1', AvailabilityZoneV1Schema)
+
+interface IMenuCategoryV1 {
+    _id: mongoose.Types.ObjectId,
+    name: string,
+    englishName?: string,
+    restaurant: mongoose.Types.ObjectId,
+    availability: mongoose.Types.ObjectId
+}
+
+const MenuCategoryV1Schema = new Schema<IMenuCategoryV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    englishName: { type: String },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    availability: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: 'AvailabilityZoneV1' }
+})
+
+const MenuCategoryV1 = model<IMenuCategoryV1>('MenuCategoryV1', MenuCategoryV1Schema)
+
+interface IMenuV1 {
+    _id: mongoose.Types.ObjectId,
+    restaurant: mongoose.Types.ObjectId,
+    categories: mongoose.Types.ObjectId[]
+    name: string
+}
+
+const MenuV1Schema = new Schema<IMenuV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    categories: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'MenuCategoryV1' },
+    name: { type: String, required: true }
+})
+
+const MenuV1 = model<IMenuV1>('MenuV1', MenuV1Schema)
+
+
+const pointSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ['Point'],
+        required: true
+    },
+    coordinates: {
+        type: [Number],
+        required: true
+    }
+});
+
+interface IGeoJSONPoint {
+    type: 'Point',
+    coordinates: [number, number]
+}
+
+const GeoJSONPointSchema = new Schema<IGeoJSONPoint>({
+    type: { type: String, enum: ['Point'], required: true },
+    coordinates: { type: [Number], required: true }
+})
+
+interface IRestaurantV1 {
+    _id: mongoose.Types.ObjectId,
+    name: string,
+    englishName?: string,
+    description: string,
+    englishDescription?: string,
+    menu: mongoose.Types.ObjectId,
+    owner: mongoose.Types.ObjectId,
+    inventoryManagers: mongoose.Types.ObjectId[],
+    isVisible: boolean,
+    isVerified: boolean,
+    address: string,
+    city: string,
+    position: IGeoJSONPoint,
+    openDuring: mongoose.Types.ObjectId[],
+    hiddenByAdmin: boolean
+}
+
+const RestaurantV1Schema = new Schema<IRestaurantV1>({
+    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    name: { type: String, required: true },
+    englishName: { type: String },
+    description: { type: String },
+    englishDescription: { type: String },
+    menu: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: 'MenuV1' },
+    owner: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: 'UserV1' },
+    inventoryManagers: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'UserV1' },
+    isVisible: { type: Boolean, required: true },
+    isVerified: { type: Boolean, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    position: { type: GeoJSONPointSchema },
+    openDuring: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'AvailabilityZoneV1' },
+    hiddenByAdmin: { type: Boolean, required: true }
+})
 
 class MongoDBSingleton {
     private static instance: MongoDBSingleton;
