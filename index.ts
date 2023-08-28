@@ -386,6 +386,16 @@ const getUserWrapper = async (req: any, res: any, canonical_id: string, fn: (use
     await fn(user)
 }
 
+const requireIsRestaurantOwnerWrapper = async (req: any, res: any, user: IUserV1, fn: (restaurant: IRestaurantV1) => Promise<void>) => {
+    await MongoDBSingleton.getInstance()
+    const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
+    if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
+        res.status(403).send('Not your restaurant')
+        return
+    }
+    await fn(restaurant)
+}
+
 app.get('/users', async (req, res) => {
     await errorWrapper(async () => {
         await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
@@ -589,6 +599,40 @@ app.post('/restaurant/:restaurant_id/food/addonCategory', async (req, res) => {
                 await addonCategory.save()
 
                 res.status(200).send('OK')
+            })
+        })
+    })
+})
+
+app.post('/restaurant/:restaurant_id/food/addonCategory/:category_id/addAddon', async (req, res) => {
+    /**
+     * Add a food addon to a food addon category
+     * Body parameters:
+     * foodAddonId
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+                    await MongoDBSingleton.getInstance()
+
+                    const category = await FoodItemAddonCategoryV1.findOne({ _id: req.params.category_id, restaurant: restaurant._id })
+                    if (!category) {
+                        res.status(404).send('Food category not found')
+                        return
+                    }
+
+                    const addon = await FoodItemAddonV1.findOne({ _id: req.body.foodAddonId, restaurant: restaurant._id })
+                    if (!addon) {
+                        res.status(404).send('Food addon not found')
+                        return
+                    }
+
+                    category.addons.push(addon._id)
+                    await category.save()
+
+                    res.status(200).send('OK')
+                })
             })
         })
     })
