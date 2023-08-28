@@ -601,6 +601,15 @@ const appRouter = router({
             await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
             return await s3.generatePresignedPutURL(input.restaurantID, 'restaurant', input.restaurantID)
         }),
+    requestPutFoodItemPicture: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            foodItemID: z.string()
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            return await s3.generatePresignedPutURL(input.restaurantID, 'food', input.foodItemID)
+        }),
     getRestaurantImage: loggedInProcedure
         .input(z.object({
             restaurantID: z.string(),
