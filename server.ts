@@ -95,7 +95,8 @@ const isAuthedUser = t.middleware(async ({ next, ctx, path, rawInput }) => {
     if (ctx.blob === null) {
         throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    console.log(`Request from userID ${ctx.blob.user.id} ${ctx.blob.user.email} ${path} ${JSON.stringify(rawInput)}`)
+    const date = new Date()
+    console.log(`${date.toISOString()} Request from userID ${ctx.blob.user.id} ${ctx.blob.user.email} ${path} ${JSON.stringify(rawInput)}`)
     return await next({
         ctx: {
             user: ctx.blob.user,
@@ -216,6 +217,7 @@ const appRouter = router({
                     price: input.price,
                     inStock: input.inStock,
                     visible: input.visible,
+                    pictureURL: ''
                 }
             })
             performance.mark("end-createRestaurantFoodItem")
@@ -790,27 +792,31 @@ const appRouter = router({
             sessionKey: sessionKey.key
         }
     }),
-    browseRestaurants: loggedInProcedure.query(async ({ ctx }) => {
-        performance.mark("start-browseRestaurants")
-        const prisma = await PrismaSingleton.getInstance()
-        const restaurants = await prisma.restaurant.findMany({})
-        const restaurantsWithPictures = await Promise.all(restaurants.map(async (restaurant) => {
-            const newObj = {
-                ...restaurant,
-                pictureURL: "https://placekitten.com/250/250"
-            }
-            performance.mark("start-s3-resourceExists")
-            if (await s3.resourceExists(restaurant.id, 'restaurant', restaurant.id)) {
-                newObj.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'restaurant', restaurant.id)
-            }
-            performance.mark("end-s3-resourceExists")
-            performance.measure("s3-resourceExists", "start-s3-resourceExists", "end-s3-resourceExists")
-            return newObj
+    browseRestaurants: loggedInProcedure
+        .input(z.object({
+
         }))
-        performance.mark("end-browseRestaurants")
-        performance.measure("browseRestaurants", "start-browseRestaurants", "end-browseRestaurants")
-        return restaurantsWithPictures
-    }),
+        .query(async ({ ctx }) => {
+            performance.mark("start-browseRestaurants")
+            const prisma = await PrismaSingleton.getInstance()
+            const restaurants = await prisma.restaurant.findMany({})
+            const restaurantsWithPictures = await Promise.all(restaurants.map(async (restaurant) => {
+                const newObj = {
+                    ...restaurant,
+                    pictureURL: "https://placekitten.com/250/250"
+                }
+                performance.mark("start-s3-resourceExists")
+                if (await s3.resourceExists(restaurant.id, 'restaurant', restaurant.id)) {
+                    newObj.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'restaurant', restaurant.id)
+                }
+                performance.mark("end-s3-resourceExists")
+                performance.measure("s3-resourceExists", "start-s3-resourceExists", "end-s3-resourceExists")
+                return newObj
+            }))
+            performance.mark("end-browseRestaurants")
+            performance.measure("browseRestaurants", "start-browseRestaurants", "end-browseRestaurants")
+            return restaurantsWithPictures
+        }),
     publicGetRestaurant: loggedInProcedure
         .input(z.object({
             restaurantID: z.number().int()
@@ -863,6 +869,16 @@ const appRouter = router({
             if (await s3.resourceExists(restaurant.id, 'restaurant', restaurant.id)) {
                 newObj.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'restaurant', restaurant.id)
             }
+            // Loop over ALL foods and generate presigned URLs for them
+            // TODO: maybe we should let this be a public bucket and skip the whole presigned URL thing?
+            await Promise.all(restaurant.menu.categories.map(async (category) => {
+                await Promise.all(category.foods.map(async (food) => {
+                    food.pictureURL = "https://placekitten.com/250/250"
+                    if (await s3.resourceExists(restaurant.id, 'food', food.id)) {
+                        food.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'food', food.id)
+                    }
+                }))
+            }))
             performance.mark("end-s3-resourceExists")
             performance.measure("s3-resourceExists", "start-s3-resourceExists", "end-s3-resourceExists")
 
