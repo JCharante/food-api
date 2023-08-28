@@ -29,6 +29,8 @@ import { performance, PerformanceObserver } from 'perf_hooks'
 import {legacyRouter} from "./server/router/legacy";
 import {createContext, router, t } from "./server/router/trpc";
 import {userRouter} from "./server/router/user";
+import { expressHandler } from 'trpc-playground/handlers/express'
+
 
 const app = express()
 
@@ -52,11 +54,26 @@ export const appRouter = t.mergeRouters(legacyRouter, namedRouters)
 // NOT the router itself.
 export type AppRouter = typeof appRouter
 
-app.use(
-    '/trpc',
-    trpcExpress.createExpressMiddleware({
-        router: appRouter,
-        createContext
-    })
-)
-app.listen(3000)
+const runApp = async () => {
+    app.use(
+        '/trpc',
+        trpcExpress.createExpressMiddleware({
+            router: appRouter,
+            createContext
+        })
+    )
+
+    app.use(
+        '/trpc-playground',
+        await expressHandler({
+            trpcApiEndpoint: '/trpc',
+            playgroundEndpoint: '/trpc-playground',
+            router: appRouter,
+        }),
+
+    )
+
+    app.listen(3000)
+}
+
+runApp()

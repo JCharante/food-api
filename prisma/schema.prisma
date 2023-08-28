@@ -128,13 +128,23 @@ model SessionKey {
 
 model User {
   id Int @id @default(autoincrement())
-  email String
+  email String @default("")
   isAdmin Boolean
   isMerchant Boolean
   name String
   password String
+  phoneNumber String @default("")
+  extraInfo Json @default("{}")
 
   ownedRestaurants Restaurant[] @relation("RestaurantOwner")
   managerOfRestaurant Restaurant[] @relation("RestaurantManager")
   sessionKeys SessionKey[]
+}
+
+model UserVerifyRequest {
+  vonageRequestId String @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  phoneNumber String
+  success Boolean @default(false)
 }
