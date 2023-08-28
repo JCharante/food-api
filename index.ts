@@ -15,6 +15,7 @@ app.use(express.json());
 
 
 interface IUserV1 {
+    _id: mongoose.Types.ObjectId
     collectionInterface: string,
     canonical_id: string,
     name: string,
@@ -351,7 +352,7 @@ const errorWrapper = async (fn: () => Promise<void>) => {
     }
 }
 
-const requiresValidSessionKeyWrapper = async (req: any, res:any, fn: (canonical_id: string) => Promise<void>) => {
+const requiresValidSessionKeyWrapper = async (req: any, res: any, fn: (canonical_id: string) => Promise<void>) => {
     if (!req.headers.authorization) {
         res.status(401).send('Unauthorized')
         return
@@ -374,6 +375,17 @@ const requiresValidSessionKeyWrapper = async (req: any, res:any, fn: (canonical_
     await fn(sessionKey.canonical_id)
 }
 
+const getUserWrapper = async (req: any, res: any, canonical_id: string, fn: (user: IUserV1) => Promise<void>) => {
+    await MongoDBSingleton.getInstance()
+
+    const user = await UserV1.findOne({ canonical_id })
+    if (!user) {
+        res.status(401).send('Unauthorized')
+        return
+    }
+    await fn(user)
+}
+
 app.get('/users', async (req, res) => {
     await errorWrapper(async () => {
         await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
@@ -394,20 +406,71 @@ app.get('/users', async (req, res) => {
 })
 
 app.get('/user/restaurants', async (req, res) => {
+    /**
+     * Get restaurants owned by a user
+     * TODO: also fetch restaurants you're an inventoryManager of
+     */
     await errorWrapper(async () => {
         await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
-            await MongoDBSingleton.getInstance()
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                const restaurants: IRestaurantV1[] = await RestaurantV1.find({ owner: user._id })
+                res.send(restaurants)
+            })
+        })
+    })
+})
 
-            const user = await UserV1.findOne({ canonical_id })
+app.post('/user/restaurant', async (req, res) => {
+    /**
+     * Create a restaurant
+     * Must have isAlsoMerchant flag enabled in user profile (by contacting support)
+     * Arguments:
+     *  name
+     *  englishName (optional)
+     *  address
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                if (!user.isAlsoMerchant) {
+                    res.status(403).send('Not a merchant')
+                    return
+                }
 
-            if (!user) {
-                res.status(401).send('Unauthorized')
-                return
-            }
+                // create placeholder menu
 
-            const restaurants: IRestaurantV1[] = await RestaurantV1.find({ owner: user._id })
+                const menu = new MenuV1({
+                    restaurant: null,
+                    categories: [],
+                    name: 'Default Menu'
+                })
 
-            res.send(restaurants)
+                const restaurant = new RestaurantV1({
+                    name: req.body.name,
+                    englishName: req.body.englishName ? req.body.englishName : null,
+                    description: 'This is a new Restaurant',
+                    menu: menu._id,
+                    owner: user._id,
+                    inventoryManagers: [],
+                    isVisible: false,
+                    isVerified: false,
+                    address: req.body.address,
+                    city: 'Hanoi',
+                    position: {
+                        type: "Point",
+                        coordinates: [0, 0]
+                    },
+                    openDuring: [],
+                    hiddenByAdmin: false
+                })
+
+                menu.restaurant = restaurant._id
+
+                await menu.save()
+                await restaurant.save()
+
+                res.status(200).send('OK')
+            })
         })
     })
 })
