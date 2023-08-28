@@ -125,11 +125,11 @@ const t = initTRPC.context<Context>().create()
 const router = t.router
 // const publicProcedure = t.procedure
 
-const isAuthedUser = t.middleware(async ({ next, ctx, path }) => {
+const isAuthedUser = t.middleware(async ({ next, ctx, path, rawInput }) => {
     if (ctx.blob === null) {
         throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    console.log(`Request from ${ctx.blob.canonicalId} ${path}`)
+    console.log(`Request from ${ctx.blob.canonicalId} ${path} ${JSON.stringify(rawInput)}`)
     return await next({
         ctx: {
             user: ctx.blob.user,
@@ -299,7 +299,7 @@ const appRouter = router({
                 addonCategory.type = input.type
             }
 
-            if (input.pickOneRequiresSelection) {
+            if (input.pickOneRequiresSelection !== undefined) {
                 addonCategory.pickOneRequiresSelection = input.pickOneRequiresSelection
             }
 
@@ -338,6 +338,65 @@ const appRouter = router({
             }
 
             await addonCategory.save()
+        }),
+    patchFoodAddon: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            addonID: z.string(),
+            names: z.optional(
+                z.object({
+                    en: z.string(),
+                    vi: z.string()
+                })
+            ),
+            descriptions: z.optional(
+                z.object({
+                    en: z.string(),
+                    vi: z.string()
+                })
+            ),
+            price: z.optional(z.number()),
+            inStock: z.optional(z.boolean()),
+            visible: z.optional(z.boolean())
+
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            const addon = await FoodItemAddonV1.findOne({
+                _id: new mongoose.Types.ObjectId(input.addonID),
+                restaurant: new mongoose.Types.ObjectId(input.restaurantID)
+            })
+
+            if (!addon) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'Addon category not found'
+                })
+            }
+
+            if (input.names) {
+                addon.names = input.names
+            }
+
+            if (input.descriptions) {
+                addon.descriptions = input.descriptions
+            }
+
+            if (input.price) {
+                addon.price = input.price
+            }
+
+            if (input.inStock !== undefined) {
+                addon.inStock = input.inStock
+            }
+
+            if (input.visible !== undefined) {
+                addon.visible = input.visible
+            }
+
+            await addon.save()
         }),
     patchRestaurantFoodItem: loggedInProcedure
         .input(z.object({
