@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FoodAddon {
+  id Int @id @default(autoincrement())
+  categories FoodAddonCategory[]
+  names Json?
+  descriptions Json?
+  inStock Boolean
+  price Int
+  visible Boolean
+  restaurantID Int
+  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+}
+
+model FoodAddonCategory {
+  id Int @id @default(autoincrement())
+  names Json?
+  type String
+  addons FoodAddon[]
+  restaurantID Int
+  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  // many-to-many
+  foods Food[]
+}
+
+model Food {
+  id Int @id @default(autoincrement())
+  names Json?
+  descriptions Json?
+  inStock Boolean
+  visible Boolean
+  price Int
+  restaurantID Int
+  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  // many-to-many
+  addons FoodAddonCategory[]
+  menuCategories MenuCategory[]
+}
+
+model MenuCategory {
+  id Int @id @default(autoincrement())
+  names Json?
+  descriptions Json?
+  // one-to-many
+  restaurantID Int
+  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  // many-to-many
+  foods Food[]
+  availabilityZones AvailabilityZone[]
+  menus Menu[]
+}
+
+model Menu {
+  id Int @id @default(autoincrement())
+  restaurant Restaurant? @relation("ActiveRestaurantMenu")
+  owningRestaurantID Int
+  owningRestaurant Restaurant @relation("RestaurantMenus", fields: [owningRestaurantID], references: [id])
+  categories MenuCategory[]
+}
+
+model AvailabilityZone {
+  id Int @id @default(autoincrement())
+  daysOfWeek Json?
+  endHour Int
+  endMinute Int
+  name String
+  menuCategories MenuCategory[]
+
+  // Restaurant that uses this AZ to describe opening hours
+  restaurantOpeningHourID Int?
+  restaurantOpeningHour Restaurant? @relation(name: "OpeningHours", fields: [restaurantOpeningHourID], references: [id])
+  // Which Restaurant "owns" this Document
+  restaurantOwnerID  Int
+  restaurantOwner Restaurant @relation(name: "RestaurantAZs", fields: [restaurantOwnerID], references: [id])
+}
+
+model RestaurantPosition {
+  id Int @id @default(autoincrement())
+  latitude Float
+  longitude Float
+  restaurantID Int? @unique
+  restaurant Restaurant? @relation(fields: [restaurantID], references: [id])
+}
+
+model Restaurant {
+  id Int @id @default(autoincrement())
+  address String
+  city String
+  descriptions Json?
+  hiddenByAdmin Boolean
+  isVerified Boolean
+  isVisible Boolean
+  names Json?
+  position RestaurantPosition?
+  // One to One
+  menuID Int @unique
+  menu Menu @relation(name: "ActiveRestaurantMenu", fields: [menuID], references: [id])
+  ownerID Int
+  owner User @relation(name: "RestaurantOwner", fields: [ownerID], references: [id])
+  // Many to Many
+  inventoryManagers User[] @relation("RestaurantManager")
+  // One to Many (restaurant is the one)
+  availabilityZones AvailabilityZone[] @relation("RestaurantAZs")
+  openingHours AvailabilityZone[] @relation("OpeningHours")
+  foodAddons FoodAddon[]
+  foodAddonCategories FoodAddonCategory[]
+  foods Food[]
+  menuCategories MenuCategory[]
+  menus Menu[] @relation("RestaurantMenus")
+}
+
+model SessionKey {
+  id Int @id @default(autoincrement())
+  key String @unique
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String
+  isAdmin Boolean
+  isMerchant Boolean
+  name String
+  password String
+
+  ownedRestaurants Restaurant[] @relation("RestaurantOwner")
+  managerOfRestaurant Restaurant[] @relation("RestaurantManager")
+  sessionKeys SessionKey[]
+}

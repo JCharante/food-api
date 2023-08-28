@@ -33,9 +33,9 @@ const bucketName = 'goodies-customer-public';
 export type resourceType = 'food' | 'food-addons' | 'restaurant'
 
 export const generatePresignedPutURL = async (
-    restaurantID: string,
+    restaurantID: number,
     resourceType: resourceType,
-    resourceID: string
+    resourceID: number
 ): Promise<string> => {
     const key = `${restaurantID}/${resourceType}/${resourceID}.jpeg`;
     const params = {
@@ -58,9 +58,9 @@ export const generatePresignedPutURL = async (
 };
 
 export const generatePresignedGetURL = async (
-    restaurantID: string,
+    restaurantID: number,
     resourceType: resourceType,
-    resourceID: string
+    resourceID: number
 ): Promise<string> => {
     const key = `${restaurantID}/${resourceType}/${resourceID}.jpeg`;
     const params = {
@@ -83,9 +83,9 @@ export const generatePresignedGetURL = async (
 
 
 export const resourceExists = async (
-    restaurantID: string,
+    restaurantID: number,
     resourceType: resourceType,
-    resourceID: string
+    resourceID: number
 ): Promise<boolean> => {
     const key = `${restaurantID}/${resourceType}/${resourceID}.jpeg`;
     const params = {
