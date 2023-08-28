@@ -92,6 +92,14 @@ model RestaurantPosition {
   restaurant Restaurant? @relation(fields: [restaurantID], references: [id])
 }
 
+model RestaurantCategory {
+  id Int @id @default(autoincrement())
+  names Json?
+  iconName String
+  // Many to Many
+  restaurants Restaurant[] @relation("RestaurantCategories")
+}
+
 model Restaurant {
   id Int @id @default(autoincrement())
   address String
@@ -109,6 +117,7 @@ model Restaurant {
   owner User @relation(name: "RestaurantOwner", fields: [ownerID], references: [id])
   // Many to Many
   inventoryManagers User[] @relation("RestaurantManager")
+  restaurantCategories RestaurantCategory[] @relation("RestaurantCategories")
   // One to Many (restaurant is the one)
   availabilityZones AvailabilityZone[] @relation("RestaurantAZs")
   openingHours AvailabilityZone[] @relation("OpeningHours")
