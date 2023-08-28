@@ -173,7 +173,7 @@ app.post('/login/email', async (req, res) => {
             return
         }
 
-        const sessionKey = await SessionKeyV1.create({ canonical_id: uuid4() })
+        const sessionKey = await SessionKeyV1.create({ canonical_id: user.canonical_id })
 
         await sessionKey.save()
 
@@ -207,6 +207,37 @@ app.delete('/logout', async (req, res) => {
             await sessionKey.delete()
         }
         res.status(200).send('OK')
+    } catch (err) {
+        console.error(err)
+        res.send(500).send('Server error')
+    }
+})
+
+app.delete('/logout/all', async (req, res) => {
+    try {
+        // get bearer token from header
+        if (!req.headers.authorization) {
+            res.status(401).send('Unauthorized')
+            return
+        }
+        if (!req.headers.authorization.startsWith('Bearer ')) {
+            res.status(401).send('Unauthorized')
+            return
+        }
+        const bearerToken = req.headers.authorization?.split(' ')[1]
+
+        await MongoDBSingleton.getInstance()
+
+        const sessionKey = await SessionKeyV1.findById(bearerToken)
+
+        if (!sessionKey) {
+            res.status(401).send('Unauthorized')
+            return
+        }
+
+        await SessionKeyV1.deleteMany({ canonical_id: sessionKey.canonical_id })
+
+        res.send(200).send('OK')
     } catch (err) {
         console.error(err)
         res.send(500).send('Server error')
