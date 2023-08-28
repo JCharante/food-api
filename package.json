@@ -1,13 +1,16 @@
 {
   "name": "@goodies-tech/api",
-  "version": "1.0.8",
+  "version": "1.0.12",
   "description": "",
-  "main": "index.ts",
-  "files": ["types.ts", "client.ts", "index.ts"],
+  "main": "dist/index.ts",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node-dev server.ts --traceResolution",
-    "lint": "npx eslint . | snazzy"
+    "lint": "npx eslint . | snazzy",
+    "build": "rm -rf dist && mkdir dist && cp types.ts client.ts index.ts dist"
   },
   "repository": {
     "type": "git",
@@ -21,11 +24,9 @@
     "mongoose": "^6.6.5"
   },
   "devDependencies": {
-    "@types/morgan": "^1.9.3",
-    "eslint-config-standard-with-typescript": "^23.0.0",
-    "typescript": "^4.8.4",
     "@types/bcrypt": "^5.0.0",
     "@types/express": "^4.17.14",
+    "@types/morgan": "^1.9.3",
     "@types/node": "^18.8.0",
     "@types/uuid4": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
@@ -33,11 +34,13 @@
     "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "eslint": "^8.25.0",
+    "eslint-config-standard-with-typescript": "^23.0.0",
     "express": "^4.18.1",
     "morgan": "^1.10.0",
     "snazzy": "^9.0.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
+    "typescript": "^4.8.4",
     "uuid4": "^2.0.3"
   }
 }

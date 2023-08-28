@@ -95,7 +95,7 @@ export interface IMenuV1 {
 
 export interface IRestaurantV1 {
     _id: mongoose.Types.ObjectId
-    names: Map<languageCode, string>
+    names: { [languageCode: string]: string }
     descriptions: Map<languageCode, string>
     menu: mongoose.Types.ObjectId
     owner: mongoose.Types.ObjectId
