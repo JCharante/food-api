@@ -241,6 +241,8 @@ const RestaurantV1Schema = new Schema<IRestaurantV1>({
     hiddenByAdmin: { type: Boolean, required: true }
 })
 
+const RestaurantV1 = model<IRestaurantV1>('RestaurantV1', RestaurantV1Schema)
+
 class MongoDBSingleton {
     private static instance: MongoDBSingleton;
     private constructor() { }
@@ -390,6 +392,27 @@ app.get('/users', async (req, res) => {
         })
     })
 })
+
+app.get('/user/restaurants', async (req, res) => {
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await MongoDBSingleton.getInstance()
+
+            const user = await UserV1.findOne({ canonical_id })
+
+            if (!user) {
+                res.status(401).send('Unauthorized')
+                return
+            }
+
+            const restaurants: IRestaurantV1[] = await RestaurantV1.find({ owner: user._id })
+
+            res.send(restaurants)
+        })
+    })
+})
+
+
 
 app.post('/login/email', async (req, res) => {
     try {
