@@ -1,4 +1,5 @@
 import mongoose, { connect, model, Schema } from 'mongoose'
+import dotenv from 'dotenv';
 import {
     IAvailabilityZoneV1,
     IFoodItemAddonCategoryV1,
@@ -12,6 +13,11 @@ import {
     IUserV1
 } from './types'
 
+// Load environment variables from .env.local file
+dotenv.config({ path: '.env.local' });
+
+const MONGODB_URI = process.env.MONGODB_URI
+
 export class MongoDBSingleton {
     private static instance: MongoDBSingleton | null = null
     private constructor () {}
@@ -22,7 +28,8 @@ export class MongoDBSingleton {
             MongoDBSingleton.instance = new MongoDBSingleton()
             mongoose.set('bufferCommands', false)
             try {
-                await connect('mongodb://0.0.0.0:27017/goodies?directConnection=true')
+                console.log(MONGODB_URI)
+                await connect(MONGODB_URI || 'mongodb://0.0.0.0:27017/goodies?directConnection=true')
             } catch (error) {
                 console.error(error)
             }

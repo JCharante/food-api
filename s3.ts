@@ -44,7 +44,9 @@ export const generatePresignedPostURL = async (
             key,
         },
         Conditions: [
-            { 'Content-Type': 'image/jpeg' },
+            ['eq', '$Content-Type', 'image/jpeg'], // Enforce the content type to be 'image/jpeg'
+            ['content-length-range', 0, 10485760], // Set a file size limit (e.g., 10 MB)
+            // Add any other conditions as required
         ],
         Expires: 3600, // 1 hour expiration
     };
@@ -57,6 +59,31 @@ export const generatePresignedPostURL = async (
             }
 
             resolve({ url: data.url, fields: data.fields });
+        });
+    });
+};
+
+export const generatePresignedPutURL = async (
+    restaurantID: string,
+    resourceType: resourceType,
+    resourceID: string
+): Promise<string> => {
+    const key = `${restaurantID}/${resourceType}/${resourceID}.jpeg`;
+    const params = {
+        Bucket: bucketName,
+        Key: key,
+        ContentType: 'image/jpeg',
+        Expires: 3600, // 1 hour expiration
+    };
+
+    return new Promise((resolve, reject) => {
+        s3.getSignedUrl('putObject', params, (err, url) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(url);
         });
     });
 };
@@ -84,6 +111,7 @@ export const generatePresignedGetURL = async (
         });
     });
 };
+
 
 export const resourceExists = async (
     restaurantID: string,

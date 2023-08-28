@@ -1,14 +1,15 @@
 'use strict'
 //
+
+
+
 import express from 'express'
+import * as controller from './controller/controller'
+import morgan from 'morgan'
+
+const app = express()
 //
-// import * as controller from './controller/controller'
-//
-// import morgan from 'morgan'
-//
-// const app = express()
-//
-// app.use(morgan('combined'))
+app.use(morgan('combined'))
 // app.use(express.json())
 //
 // app.get('/', (req: express.Request, res: express.Response) => {
@@ -42,9 +43,9 @@ import express from 'express'
 // app.post('/restaurant/:restaurant_id/food/addon', controller.restaurant.food.addons.postCreateAddon)
 //
 // // User related routes
-// app.post('/login/email', controller.user.postLoginWithEmail)
-// app.delete('/logout/all', controller.user.deleteUserAllSessionKeys)
-// app.post('/signup/email', controller.user.postUserSignupWithEmail)
+app.post('/login/email', express.json(), controller.user.postLoginWithEmail)
+app.delete('/logout/all', express.json(), controller.user.deleteUserAllSessionKeys)
+app.post('/signup/email', express.json(), controller.user.postUserSignupWithEmail)
 // app.delete('/logout', controller.user.deleteUserSessionKey)
 // // Normal end-user routes
 // app.get('/restaurants', controller.restaurant.getRestaurants)
@@ -77,6 +78,7 @@ import { z } from 'zod'
 import { requireIsRestaurantOwnerWrapperTRPC } from './wrappers'
 import mongoose from 'mongoose'
 import {log} from "util";
+import {generatePresignedPutURL} from "./s3";
 
 export async function createContext ({
     req,
@@ -571,7 +573,7 @@ const appRouter = router({
         }))
         .mutation(async ({ ctx, input }) => {
             await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
-            const req =  await s3.generatePresignedPostURL(input.restaurantID, 'restaurant', input.restaurantID)
+            const req =  await s3.generatePresignedPutURL(input.restaurantID, 'restaurant', input.restaurantID)
             return req
         })
 })
@@ -580,7 +582,6 @@ const appRouter = router({
 // NOT the router itself.
 export type AppRouter = typeof appRouter
 
-const app = express()
 app.use(
     '/trpc',
     trpcExpress.createExpressMiddleware({
