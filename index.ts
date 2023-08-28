@@ -22,6 +22,7 @@ interface IUserV1 {
     phone?: string,
     password?: string,
     isAlsoMerchant: boolean,
+    isAlsoAdmin: boolean,
 }
 
 const UserV1Schema = new Schema<IUserV1>({
@@ -32,17 +33,20 @@ const UserV1Schema = new Schema<IUserV1>({
     phone: { type: String },
     password: { type: String },
     isAlsoMerchant: { type: Boolean, required: true, default: false },
+    isAlsoAdmin: { type: Boolean, required: true, default: false },
 });
 
 const UserV1 = model<IUserV1>('UserV1', UserV1Schema);
 
 interface ISessionKeyV1 {
     _id: mongoose.Types.ObjectId,
+    sessionKey: string,
     collectionInterface: string,
     canonical_id: string
 }
 
 const SessionKeyV1Schema = new Schema<ISessionKeyV1>({
+    sessionKey: { type: String, required: true, unique: true },
     collectionInterface: { type: String, default: 'SessionKeyV1' },
     canonical_id: { type: String, required: true }
 })
@@ -344,12 +348,54 @@ app.get('/restaurants', async (req, res) => {
     res.send(body)
 })
 
-app.get('/users', async (req, res) => {
+const errorWrapper = async (fn: () => Promise<void>) => {
+    try {
+        await fn()
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+const requiresValidSessionKeyWrapper = async (req: any, res:any, fn: (canonical_id: string) => Promise<void>) => {
+    if (!req.headers.authorization) {
+        res.status(401).send('Unauthorized')
+        return
+    }
+    if (!req.headers.authorization.startsWith('Bearer ')) {
+        res.status(401).send('Unauthorized')
+        return
+    }
+    const bearerToken = req.headers.authorization?.split(' ')[1]
+
     await MongoDBSingleton.getInstance()
 
-    const users: IUserV1[] = await UserV1.find({})
+    const sessionKey = await SessionKeyV1.findOne({ sessionKey: bearerToken })
 
-    res.send(users)
+    if (!sessionKey) {
+        res.status(401).send('Unauthorized')
+        return
+    }
+
+    await fn(sessionKey.canonical_id)
+}
+
+app.get('/users', async (req, res) => {
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await MongoDBSingleton.getInstance()
+
+            // only for admins
+            const user = await UserV1.findOne({ canonical_id })
+            if (!user || !user.isAlsoAdmin) {
+                res.status(401).send('Unauthorized')
+                return
+            }
+
+            const users: IUserV1[] = await UserV1.find({})
+
+            res.send(users)
+        })
+    })
 })
 
 app.post('/login/email', async (req, res) => {
@@ -370,12 +416,15 @@ app.post('/login/email', async (req, res) => {
             return
         }
 
-        const sessionKey = await SessionKeyV1.create({ canonical_id: user.canonical_id })
+        const sessionKey = await SessionKeyV1.create({
+            canonical_id: user.canonical_id,
+            sessionKey: uuid4()
+        })
 
         await sessionKey.save()
 
         res.send({
-            sessionKey: sessionKey._id
+            sessionKey: sessionKey.sessionKey
         })
     } catch(err) {
         console.error(err)
@@ -398,7 +447,7 @@ app.delete('/logout', async (req, res) => {
 
         await MongoDBSingleton.getInstance()
 
-        const sessionKey = await SessionKeyV1.findById(bearerToken)
+        const sessionKey = await SessionKeyV1.findOne({ sessionKey: bearerToken })
 
         if (sessionKey) {
             await sessionKey.delete()
@@ -425,7 +474,7 @@ app.delete('/logout/all', async (req, res) => {
 
         await MongoDBSingleton.getInstance()
 
-        const sessionKey = await SessionKeyV1.findById(bearerToken)
+        const sessionKey = await SessionKeyV1.findOne({ sessionKey: bearerToken })
 
         if (!sessionKey) {
             res.status(401).send('Unauthorized')
