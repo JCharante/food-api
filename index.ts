@@ -58,7 +58,7 @@ interface IFoodItemAddonV1 {
     _id: mongoose.Types.ObjectId,
     name: string,
     englishName?: string,
-    description: string,
+    description?: string,
     englishDescription?: string,
     restaurant: mongoose.Types.ObjectId,
     price: number,
@@ -475,7 +475,43 @@ app.post('/user/restaurant', async (req, res) => {
     })
 })
 
+app.post('/restaurant/:restaurant_id/food/addon', async (req, res) => {
+    /**
+     * Create a food addon
+     * Body Arguments:
+     *  name
+     *  englishName (optional)
+     *  description (optional)
+     *  englishDescription (optional)
+     *  price
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await MongoDBSingleton.getInstance()
+                console.log(req.params.restaurant_id)
+                const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
+                if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
+                    res.status(403).send('Not your restaurant')
+                    return
+                }
 
+                const addon = new FoodItemAddonV1({
+                    name: req.body.name,
+                    englishName: req.body.englishName ? req.body.englishName : null,
+                    description: req.body.description,
+                    englishDescription: req.body.englishDescription ? req.body.englishDescription : null,
+                    restaurant: restaurant._id,
+                    price: req.body.price
+                })
+
+                await addon.save()
+
+                res.status(200).send('OK')
+            })
+        })
+    })
+})
 
 app.post('/login/email', async (req, res) => {
     try {
