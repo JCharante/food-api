@@ -2,10 +2,41 @@
 //
 
 
-
 import express from 'express'
 import * as controller from './controller/controller'
 import morgan from 'morgan'
+// app.delete('/logout', controller.user.deleteUserSessionKey)
+// // Normal end-user routes
+// app.get('/restaurants', controller.restaurant.getRestaurants)
+// app.get('/restaurant/:restaurant_id', controller.restaurant.getRestaurant)
+// // Admin routes
+// app.get('/users', controller.admin.getUsers)
+//
+// // eslint-disable-next-line @typescript-eslint/no-var-requires
+// require('dotenv').config({ path: '.env.local' })
+// app.listen(3000, '0.0.0.0', () => {
+//     console.log('The application is listening on port 3000!')
+// })
+import {inferAsyncReturnType, initTRPC, TRPCError} from '@trpc/server'
+import * as trpcNext from '@trpc/server/adapters/next'
+import * as trpcExpress from '@trpc/server/adapters/express'
+import * as s3 from './s3'
+
+import {
+    FoodItemAddonCategoryV1,
+    FoodItemAddonV1,
+    FoodItemV1,
+    MenuCategoryV1,
+    MenuV1,
+    MongoDBSingleton,
+    RestaurantV1,
+    SessionKeyV1,
+    UserV1
+} from './database'
+import {z} from 'zod'
+import {requireIsRestaurantOwnerWrapperTRPC} from './wrappers'
+import mongoose from 'mongoose'
+import {IRestaurantV1} from "./types";
 
 const app = express()
 //
@@ -46,39 +77,6 @@ app.use(morgan('combined'))
 app.post('/login/email', express.json(), controller.user.postLoginWithEmail)
 app.delete('/logout/all', express.json(), controller.user.deleteUserAllSessionKeys)
 app.post('/signup/email', express.json(), controller.user.postUserSignupWithEmail)
-// app.delete('/logout', controller.user.deleteUserSessionKey)
-// // Normal end-user routes
-// app.get('/restaurants', controller.restaurant.getRestaurants)
-// app.get('/restaurant/:restaurant_id', controller.restaurant.getRestaurant)
-// // Admin routes
-// app.get('/users', controller.admin.getUsers)
-//
-// // eslint-disable-next-line @typescript-eslint/no-var-requires
-// require('dotenv').config({ path: '.env.local' })
-// app.listen(3000, '0.0.0.0', () => {
-//     console.log('The application is listening on port 3000!')
-// })
-import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
-import * as trpcNext from '@trpc/server/adapters/next'
-import * as trpcExpress from '@trpc/server/adapters/express'
-import * as s3 from './s3'
-
-import {
-    FoodItemAddonCategoryV1,
-    FoodItemAddonV1,
-    FoodItemV1,
-    MenuCategoryV1,
-    MenuV1,
-    MongoDBSingleton,
-    RestaurantV1,
-    SessionKeyV1,
-    UserV1
-} from './database'
-import { z } from 'zod'
-import { requireIsRestaurantOwnerWrapperTRPC } from './wrappers'
-import mongoose from 'mongoose'
-import {log} from "util";
-import {generatePresignedPutURL} from "./s3";
 
 export async function createContext ({
     req,
@@ -149,7 +147,18 @@ const appRouter = router({
         const { user } = ctx
         await MongoDBSingleton.getInstance()
         const restaurants = await RestaurantV1.find({ owner: user._id }).populate('menu')
-        return JSON.parse(JSON.stringify(restaurants))
+        const restaurantsWithPictures = await Promise.all(restaurants.map(async (restaurant) => {
+            const newObj = {
+                ...restaurant.toJSON(),
+                pictureURL: "https://placekitten.com/250/250"
+            }
+            if (await s3.resourceExists(restaurant._id.toString(), 'restaurant', restaurant._id.toString())) {
+                newObj.pictureURL = await s3.generatePresignedGetURL(restaurant._id.toString(), 'restaurant', restaurant._id.toString())
+            }
+            return newObj
+        }))
+        console.log(restaurantsWithPictures)
+        return restaurantsWithPictures
     }),
     getRestaurantCategories: loggedInProcedure
         .input(z.object({
@@ -573,8 +582,14 @@ const appRouter = router({
         }))
         .mutation(async ({ ctx, input }) => {
             await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
-            const req =  await s3.generatePresignedPutURL(input.restaurantID, 'restaurant', input.restaurantID)
-            return req
+            return await s3.generatePresignedPutURL(input.restaurantID, 'restaurant', input.restaurantID)
+        }),
+    getRestaurantImage: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+        }))
+        .query(async ({ ctx, input }) => {
+            return await s3.generatePresignedGetURL(input.restaurantID, 'restaurant', input.restaurantID)
         })
 })
 

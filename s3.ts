@@ -32,37 +32,6 @@ const bucketName = 'goodies-customer-public';
 
 export type resourceType = 'food' | 'food-addons' | 'restaurant'
 
-export const generatePresignedPostURL = async (
-    restaurantID: string,
-    resourceType: resourceType,
-    resourceID: string
-): Promise<{ url: string; fields: { [key: string]: string } }> => {
-    const key = `${restaurantID}/${resourceType}/${resourceID}.jpeg`;
-    const params = {
-        Bucket: bucketName,
-        Fields: {
-            key,
-        },
-        Conditions: [
-            ['eq', '$Content-Type', 'image/jpeg'], // Enforce the content type to be 'image/jpeg'
-            ['content-length-range', 0, 10485760], // Set a file size limit (e.g., 10 MB)
-            // Add any other conditions as required
-        ],
-        Expires: 3600, // 1 hour expiration
-    };
-
-    return new Promise((resolve, reject) => {
-        s3.createPresignedPost(params, (err, data) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            resolve({ url: data.url, fields: data.fields });
-        });
-    });
-};
-
 export const generatePresignedPutURL = async (
     restaurantID: string,
     resourceType: resourceType,
