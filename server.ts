@@ -361,6 +361,7 @@ const appRouter = router({
                     })
                 }
                 updatedFields.addons = {
+                    set: [],
                     connect: input.addons.map(id => ({ id }))
                 }
             }
@@ -556,13 +557,13 @@ const appRouter = router({
                         message: 'One or more categories not found'
                     })
                 }
-                // TODO: check this many to many update works
                 await prisma.menu.update({
                     where: {
                         id: input.menuID
                     },
                     data: {
                         categories: {
+                            set: [],
                             connect: input.categories.map(id => ({id}))
                         }
                     }
@@ -623,14 +624,13 @@ const appRouter = router({
                         message: 'Food item doesn\'t belong to this restaurant'
                     })
                 }
-                // TODO: verify this works
-                // https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/working-with-many-to-many-relations
                 await prisma.menuCategory.update({
                     where: {
                         id: input.categoryID
                     },
                     data: {
                         foods: {
+                            set: [],
                             connect: input.items.map(id => ({ id }))
                         }
                     }
@@ -789,7 +789,87 @@ const appRouter = router({
         return {
             sessionKey: sessionKey.key
         }
-    })
+    }),
+    browseRestaurants: loggedInProcedure.query(async ({ ctx }) => {
+        performance.mark("start-browseRestaurants")
+        const prisma = await PrismaSingleton.getInstance()
+        const restaurants = await prisma.restaurant.findMany({})
+        const restaurantsWithPictures = await Promise.all(restaurants.map(async (restaurant) => {
+            const newObj = {
+                ...restaurant,
+                pictureURL: "https://placekitten.com/250/250"
+            }
+            performance.mark("start-s3-resourceExists")
+            if (await s3.resourceExists(restaurant.id, 'restaurant', restaurant.id)) {
+                newObj.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'restaurant', restaurant.id)
+            }
+            performance.mark("end-s3-resourceExists")
+            performance.measure("s3-resourceExists", "start-s3-resourceExists", "end-s3-resourceExists")
+            return newObj
+        }))
+        performance.mark("end-browseRestaurants")
+        performance.measure("browseRestaurants", "start-browseRestaurants", "end-browseRestaurants")
+        return restaurantsWithPictures
+    }),
+    publicGetRestaurant: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.number().int()
+        }))
+        .query(async ({ ctx, input }) => {
+            performance.mark("start-publicGetRestaurant")
+            const prisma = await PrismaSingleton.getInstance()
+            const restaurant = await prisma.restaurant.findUnique({
+                where: {
+                    id: input.restaurantID
+                },
+                include: {
+                    menu: {
+                        include: {
+                            categories: {
+                                include: {
+                                    foods: {
+                                        where: {
+                                            visible: true
+                                        },
+                                        include: {
+                                            addons: {
+                                                include: {
+                                                    addons: {
+                                                        where: {
+                                                            visible: true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+            if (!restaurant) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'Invalid restaurant ID'
+                })
+            }
+            const newObj = {
+                ...restaurant,
+                pictureURL: "https://placekitten.com/250/250"
+            }
+            performance.mark("start-s3-resourceExists")
+            if (await s3.resourceExists(restaurant.id, 'restaurant', restaurant.id)) {
+                newObj.pictureURL = await s3.generatePresignedGetURL(restaurant.id, 'restaurant', restaurant.id)
+            }
+            performance.mark("end-s3-resourceExists")
+            performance.measure("s3-resourceExists", "start-s3-resourceExists", "end-s3-resourceExists")
+
+            performance.mark("end-publicGetRestaurant")
+            performance.measure("publicGetRestaurant", "start-publicGetRestaurant", "end-publicGetRestaurant")
+            return newObj
+        })
 })
 
 // Export type router type signature,
