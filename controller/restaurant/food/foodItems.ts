@@ -7,7 +7,7 @@ import {
     requiresValidSessionKeyWrapper
 } from '../../../wrappers'
 import { IRestaurantV1, IUserV1 } from '../../../types'
-import { FoodItemV1, MongoDBSingleton } from '../../../database'
+import { FoodItemAddonCategoryV1, FoodItemV1, MongoDBSingleton } from '../../../database'
 
 export const postCreateFoodItem = async (req: express.Request, res: express.Response) => {
     /**
@@ -77,6 +77,61 @@ export const getFoodItems = async (req: express.Request, res: express.Response) 
                     await MongoDBSingleton.getInstance()
                     const foodItems = await FoodItemV1.find({ restaurant: restaurant._id })
                     res.status(200).send(foodItems)
+                })
+            })
+        })
+    })
+}
+
+export const patchFoodItem = async (req: express.Request, res: express.Response) => {
+    /**
+     * Edit a food item, must be owner
+     *
+     * URL: /restaurant/:restaurant_id/food/foodItem/:foodItem_id
+     * method: PATCH
+     *
+     * Body parameters:
+     *
+     * addons (optional) object IDs of addon categories
+     *
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+            await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+                await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+                    await assertTypesWrapper(req, res, [
+                        { field: 'addons', type: 'array', isRequired: false }
+                    ], async () => {
+                        await MongoDBSingleton.getInstance()
+                        const foodItem = await FoodItemV1.findOne({ _id: req.params.foodItem_id, restaurant: restaurant._id })
+                        if (foodItem === null) {
+                            res.status(404).send('Not found')
+                            return
+                        }
+
+                        if (req.body.addons !== undefined) {
+                            // Make sure entries in addons are strings
+                            for (const addon of req.body.addons) {
+                                if (typeof addon !== 'string') {
+                                    res.status(400).send('Bad request')
+                                    return
+                                }
+                            }
+                            // Make sure addons are valid
+                            for (const addon of req.body.addons) {
+                                const addonCategory = await FoodItemAddonCategoryV1.findOne({ _id: addon, restaurant: restaurant._id })
+                                if (addonCategory === null) {
+                                    res.status(400).send('Bad request')
+                                    return
+                                }
+                            }
+                            foodItem.addons = req.body.addons
+                        }
+
+                        await foodItem.save()
+
+                        res.status(200).send('OK')
+                    })
                 })
             })
         })
