@@ -84,7 +84,7 @@ interface IFoodItemAddonCategoryV1 {
     restaurant: mongoose.Types.ObjectId,
     type: string,
     addons: mongoose.Types.ObjectId[],
-    pickOneRequiresSelect?: boolean,
+    pickOneRequiresSelection?: boolean,
     pickOneDefaultValue?: mongoose.Types.ObjectId,
 }
 
@@ -94,7 +94,7 @@ const FoodItemAddonCategoryV1Schema = new Schema<IFoodItemAddonCategoryV1>({
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     type: { type: String, required: true },
     addons: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemAddonV1' },
-    pickOneRequiresSelect: { type: Boolean },
+    pickOneRequiresSelection: { type: Boolean },
     pickOneDefaultValue: { type: mongoose.SchemaTypes.ObjectId}
 })
 
@@ -489,7 +489,6 @@ app.post('/restaurant/:restaurant_id/food/addon', async (req, res) => {
         await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
             await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
                 await MongoDBSingleton.getInstance()
-                console.log(req.params.restaurant_id)
                 const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
                 if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
                     res.status(403).send('Not your restaurant')
@@ -506,6 +505,66 @@ app.post('/restaurant/:restaurant_id/food/addon', async (req, res) => {
                 })
 
                 await addon.save()
+
+                res.status(200).send('OK')
+            })
+        })
+    })
+})
+
+app.get('/restaurant/:restaurant_id/food/addons', async (req, res) => {
+    /**
+     * Returns the list of food addons for a restaurant (must be owner OR inventory manager)
+      */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await MongoDBSingleton.getInstance()
+                const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
+                if (!restaurant || (restaurant.owner.toString() !== user._id.toString() && !restaurant.inventoryManagers.includes(user._id))) {
+                    res.status(403).send('Not your restaurant')
+                    return
+                }
+
+                const addons = await FoodItemAddonV1.find({ restaurant: restaurant._id })
+
+                res.status(200).send(addons)
+            })
+        })
+    })
+})
+
+app.post('/restaurant/:restaurant_id/food/addonCategory', async (req, res) => {
+    /**
+     * Create a food addon category
+     * Body Arguments:
+     *  name
+     *  englishName (optional)
+     *  type: 'multipleChoice' | 'pickOne'
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await MongoDBSingleton.getInstance()
+                const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
+                if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
+                    res.status(403).send('Not your restaurant')
+                    return
+                }
+
+                if (req.body.type !== 'multipleChoice' && req.body.type !== 'pickOne') {
+                    res.status(400).send('Invalid type')
+                }
+
+                const addonCategory = new FoodItemAddonCategoryV1({
+                    name: req.body.name,
+                    englishName: req.body.englishName ? req.body.englishName : null,
+                    restaurant: restaurant._id,
+                    type: req.body.type,
+                    addons: []
+                })
+
+                await addonCategory.save()
 
                 res.status(200).send('OK')
             })
