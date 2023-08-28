@@ -27,6 +27,7 @@ app.patch('/restaurant/:restaurant_id/food/category/:category_id', controller.re
 //    food items
 app.get('/restaurant/:restaurant_id/food/foodItems', controller.restaurant.food.foodItems.getFoodItems)
 app.post('/restaurant/:restaurant_id/food/foodItem', controller.restaurant.food.foodItems.postCreateFoodItem)
+app.patch('/restaurant/:restaurant_id/food/foodItem/:foodItemID', controller.restaurant.food.foodItems.patchFoodItem)
 //    addon categories
 app.get('/restaurant/:restaurant_id/food/addonCategories', controller.restaurant.food.addons.getAddonCategories)
 app.post('/restaurant/:restaurant_id/food/addonCategory', controller.restaurant.food.addons.postAddonCategory)

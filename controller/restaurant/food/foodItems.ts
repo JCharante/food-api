@@ -87,7 +87,7 @@ export const patchFoodItem = async (req: express.Request, res: express.Response)
     /**
      * Edit a food item, must be owner
      *
-     * URL: /restaurant/:restaurant_id/food/foodItem/:foodItem_id
+     * URL: /restaurant/:restaurant_id/food/foodItem/:foodItemID
      * method: PATCH
      *
      * Body parameters:
@@ -103,7 +103,7 @@ export const patchFoodItem = async (req: express.Request, res: express.Response)
                         { field: 'addons', type: 'array', isRequired: false }
                     ], async () => {
                         await MongoDBSingleton.getInstance()
-                        const foodItem = await FoodItemV1.findOne({ _id: req.params.foodItem_id, restaurant: restaurant._id })
+                        const foodItem = await FoodItemV1.findOne({ _id: req.params.foodItemID, restaurant: restaurant._id })
                         if (foodItem === null) {
                             res.status(404).send('Not found')
                             return
