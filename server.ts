@@ -157,7 +157,6 @@ const appRouter = router({
             }
             return newObj
         }))
-        console.log(restaurantsWithPictures)
         return restaurantsWithPictures
     }),
     getRestaurantCategories: loggedInProcedure
