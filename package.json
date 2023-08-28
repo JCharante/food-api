@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node-dev server.ts --traceResolution",
+    "start-api": "ts-node-dev server.ts --traceResolution",
     "lint": "npx eslint . | snazzy",
     "build": "rm -rf dist && mkdir dist && cp server.ts dist"
   },
