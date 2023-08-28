@@ -1,6 +1,11 @@
 # goodies/api
 
+## TODO List:
 
+- Refactor index.ts into multiple files
+- Add tests
+- Instead of name/englishName model, have proper i18n obj.
+- Track amount of API requests per user per endpoint per day
 
 ## Getting Started
 
