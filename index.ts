@@ -65,7 +65,6 @@ interface IFoodItemAddonV1 {
 }
 
 const FoodItemAddonV1Schema = new Schema<IFoodItemAddonV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     englishName: { type: String },
     description: { type: String },
@@ -89,7 +88,6 @@ interface IFoodItemAddonCategoryV1 {
 }
 
 const FoodItemAddonCategoryV1Schema = new Schema<IFoodItemAddonCategoryV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     englishName: { type: String },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
@@ -116,7 +114,6 @@ interface IFoodItemV1 {
 }
 
 const FoodItemV1Schema = new Schema<IFoodItemV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     englishName: { type: String },
     description: { type: String },
@@ -143,7 +140,6 @@ interface IAvailabilityZoneV1 {
 }
 
 const AvailabilityZoneV1Schema = new Schema<IAvailabilityZoneV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     startHour: { type: Number, required: true },
@@ -164,7 +160,6 @@ interface IMenuCategoryV1 {
 }
 
 const MenuCategoryV1Schema = new Schema<IMenuCategoryV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     englishName: { type: String },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
@@ -181,7 +176,6 @@ interface IMenuV1 {
 }
 
 const MenuV1Schema = new Schema<IMenuV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     categories: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'MenuCategoryV1' },
     name: { type: String, required: true }
@@ -231,7 +225,6 @@ interface IRestaurantV1 {
 }
 
 const RestaurantV1Schema = new Schema<IRestaurantV1>({
-    _id: { type: mongoose.SchemaTypes.ObjectId, required: true },
     name: { type: String, required: true },
     englishName: { type: String },
     description: { type: String },
