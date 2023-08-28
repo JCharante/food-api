@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+type Modify<T, R> = Omit<T, keyof R> & R
+
 export interface IUserV1 {
     _id: mongoose.Types.ObjectId
     collectionInterface: string
@@ -55,6 +57,10 @@ export interface IFoodItemV1 {
     pictureID?: string
 }
 
+export type IFoodItemAPI = Modify<IFoodItemV1, {
+    _id: string
+}>
+
 export interface IAvailabilityZoneV1 {
     _id: mongoose.Types.ObjectId
     restaurant: mongoose.Types.ObjectId
@@ -66,14 +72,23 @@ export interface IAvailabilityZoneV1 {
     daysOfWeek: number[]
 }
 
+// Menu Category
+
 export interface IMenuCategoryV1 {
-    _id: mongoose.Types.ObjectId
     name: string
     englishName?: string
+    _id: mongoose.Types.ObjectId
     restaurant: mongoose.Types.ObjectId
     availability?: mongoose.Types.ObjectId
     foodItems: mongoose.Types.ObjectId[]
 }
+
+export type IMenuCategoryAPI = Modify<IMenuCategoryV1, {
+    _id: string
+    foodItems: IFoodItemAPI[]
+}>
+
+// Menu
 
 export interface IMenuV1 {
     _id: mongoose.Types.ObjectId

@@ -1,12 +1,12 @@
 {
   "name": "@goodies-tech/api",
-  "version": "1.0.1",
+  "version": "1.0.7",
   "description": "",
   "main": "index.js",
-  "files": ["types.ts"],
+  "files": ["types.ts", "client.ts", "index.ts"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node-dev index.ts --traceResolution",
+    "start": "ts-node-dev server.ts --traceResolution",
     "lint": "npx eslint . | snazzy"
   },
   "repository": {
