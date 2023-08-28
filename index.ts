@@ -31,6 +31,8 @@ app.post('/restaurant/:restaurant_id/food/addonCategory/:category_id/addAddon', 
 
 app.post('/restaurant/:restaurant_id/availability', controller.restaurant.postAvailability)
 
+app.get('/restaurant/:restaurant_id/availabilityZones', controller.restaurant.getAvailabilityZones)
+
 app.post('/restaurant/:restaurant_id/food/foodItem', controller.restaurant.food.foodItems.postCreateFoodItem)
 
 app.post('/login/email', controller.user.postLoginWithEmail)

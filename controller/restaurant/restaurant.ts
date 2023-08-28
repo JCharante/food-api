@@ -1,6 +1,11 @@
 import express from 'express'
-import { errorWrapper, getUserWrapper, requiresValidSessionKeyWrapper } from '../../wrappers'
-import { IUserV1 } from '../../types'
+import {
+  errorWrapper,
+  getUserWrapper,
+  requireIsRestaurantOwnerWrapper,
+  requiresValidSessionKeyWrapper
+} from '../../wrappers'
+import { IRestaurantV1, IUserV1 } from '../../types'
 import { AvailabilityZoneV1, MenuV1, MongoDBSingleton, RestaurantV1 } from '../../database'
 
 export * as food from './food/index'
@@ -124,6 +129,27 @@ export const postNewRestaurant = async (req: express.Request, res: express.Respo
         await restaurant.save()
 
         res.status(200).send('OK')
+      })
+    })
+  })
+}
+
+export const getAvailabilityZones = async (req: express.Request, res: express.Response) => {
+  /**
+   * URL: /restaurant/:restaurant_id/availabilityZones
+   *
+   * Get all availability zones for a restaurant
+   */
+  await errorWrapper(async () => {
+    await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+      await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+        await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+          await MongoDBSingleton.getInstance()
+
+          const availabilityZones = await AvailabilityZoneV1.find({ restaurant: restaurant._id })
+
+          res.status(200).send(availabilityZones)
+        })
       })
     })
   })
