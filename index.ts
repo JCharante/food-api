@@ -594,6 +594,71 @@ app.post('/restaurant/:restaurant_id/food/addonCategory', async (req, res) => {
     })
 })
 
+app.post('/restaurant/:restaurant_id/availability', async (req, res) => {
+    /**
+     * Create a new availability zone for a restaurant
+     * Body parameters:
+     * name
+     * startHour
+     * startMinute
+     * endHour
+     * endMinute
+     * daysOfWeek [number], where 1 = Sunday, 2 = Monday, etc.
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await MongoDBSingleton.getInstance()
+                const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
+                if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
+                    res.status(403).send('Not your restaurant')
+                    return
+                }
+                if (!req.body.name) {
+                    res.status(400).send('Missing name')
+                    return
+                }
+                if (!req.body.startHour || req.body.startHour < 0 || req.body.startHour > 23) {
+                    res.status(400).send('Invalid start hour')
+                    return
+                }
+                if (!req.body.startMinute || req.body.startMinute < 0 || req.body.startMinute > 59) {
+                    res.status(400).send('Invalid start minute')
+                    return
+                }
+                if (!req.body.endHour || req.body.endHour < 0 || req.body.endHour > 23) {
+                    res.status(400).send('Invalid end hour')
+                    return
+                }
+                if (!req.body.endMinute || req.body.endMinute < 0 || req.body.endMinute > 59) {
+                    res.status(400).send('Invalid end minute')
+                    return
+                }
+                for (const day of req.body.daysOfWeek) {
+                    if (typeof day !== typeof 2 || day < 1 || day > 7) {
+                        res.status(400).send('Invalid day of week')
+                        return
+                    }
+                }
+
+                const availability = new AvailabilityZoneV1({
+                    restaurant: restaurant._id,
+                    name: req.body.name,
+                    startHour: req.body.startHour,
+                    startMinute: req.body.startMinute,
+                    endHour: req.body.endHour,
+                    endMinute: req.body.endMinute,
+                    daysOfWeek: req.body.daysOfWeek
+                })
+
+                await availability.save()
+
+                res.status(200).send('OK')
+            })
+        })
+    })
+})
+
 app.post('/login/email', async (req, res) => {
     try {
         await MongoDBSingleton.getInstance()
