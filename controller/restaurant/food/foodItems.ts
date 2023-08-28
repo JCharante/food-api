@@ -61,3 +61,24 @@ export const postCreateFoodItem = async (req: express.Request, res: express.Resp
         })
     })
 }
+
+export const getFoodItems = async (req: express.Request, res: express.Response) => {
+    /**
+     *
+     * Returns all food items for a restaurant, must be owner
+     *
+     * URL: /restaurant/:restaurant_id/food/foodItems
+     * method: GET
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+            await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+                await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+                    await MongoDBSingleton.getInstance()
+                    const foodItems = await FoodItemV1.find({ restaurant: restaurant._id })
+                    res.status(200).send(foodItems)
+                })
+            })
+        })
+    })
+}
