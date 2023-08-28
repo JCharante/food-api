@@ -17,10 +17,8 @@ export const postCreateFoodItem = async (req: express.Request, res: express.Resp
    *
    * Body Parameters:
    *
-   * name: string
-   * englishName: string (optional)
-   * description: string
-   * englishDescription: string (optional)
+   * names: Map<string,string>
+   * descriptions: Map<string,string>
    * price: number
    * inStock: boolean
    * visible: boolean
@@ -30,10 +28,8 @@ export const postCreateFoodItem = async (req: express.Request, res: express.Resp
             await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
                 await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
                     await assertTypesWrapper(req, res, [
-                        { field: 'name', type: 'string', isRequired: true },
-                        { field: 'englishName', type: 'string', isRequired: false },
-                        { field: 'description', type: 'string', isRequired: true },
-                        { field: 'englishDescription', type: 'string', isRequired: false },
+                        { field: 'name', type: 'object', values: 'string', isRequired: true },
+                        { field: 'description', type: 'object', values: 'string', isRequired: true },
                         { field: 'price', type: 'number', isRequired: true },
                         { field: 'inStock', type: 'boolean', isRequired: true },
                         { field: 'visible', type: 'boolean', isRequired: true }
@@ -42,10 +38,8 @@ export const postCreateFoodItem = async (req: express.Request, res: express.Resp
 
                         const foodItem = new FoodItemV1({
                             restaurant: restaurant._id,
-                            name: req.body.name,
-                            englishName: req.body.englishName !== undefined ? req.body.englishName : null,
-                            description: req.body.description,
-                            englishDescription: req.body.englishDescription !== undefined ? req.body.englishDescription : null,
+                            names: req.body.names,
+                            descriptions: req.body.descriptions,
                             price: req.body.price,
                             inStock: req.body.inStock,
                             visible: req.body.visible,

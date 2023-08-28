@@ -4,9 +4,7 @@ This repo uses the standard preset for eslint, minus a few rules to simplify dev
 
 ## TODO List:
 
-- Refactor server.ts into multiple files
 - Add tests
-- Instead of name/englishName model, have proper i18n obj.
 - Track amount of API requests per user per endpoint per day
 
 ## Getting Started

@@ -32,8 +32,8 @@ export const postAvailability = async (req: express.Request, res: express.Respon
                     res.status(403).send('Not your restaurant')
                     return
                 }
-                if (req.body.name === undefined) {
-                    res.status(400).send('Missing name')
+                if (req.body.names === undefined) {
+                    res.status(400).send('Missing names object')
                     return
                 }
                 if (req.body.startHour === undefined || req.body.startHour < 0 || req.body.startHour > 23) {
@@ -61,7 +61,7 @@ export const postAvailability = async (req: express.Request, res: express.Respon
 
                 const availability = new AvailabilityZoneV1({
                     restaurant: restaurant._id,
-                    name: req.body.name,
+                    names: req.body.names,
                     startHour: req.body.startHour,
                     startMinute: req.body.startMinute,
                     endHour: req.body.endHour,
@@ -84,8 +84,7 @@ export const postNewRestaurant = async (req: express.Request, res: express.Respo
      * Create a restaurant
      * Must have isAlsoMerchant flag enabled in user profile (by contacting support)
      * Arguments:
-     *  name
-     *  englishName (optional)
+     *  names
      *  address
      */
     await errorWrapper(async () => {
@@ -105,9 +104,10 @@ export const postNewRestaurant = async (req: express.Request, res: express.Respo
                 })
 
                 const restaurant = new RestaurantV1({
-                    name: req.body.name,
-                    englishName: req.body.englishName !== undefined ? req.body.englishName : null,
-                    description: 'This is a new Restaurant',
+                    names: req.body.names,
+                    descriptions: {
+                        en: 'This is a new Restaurant'
+                    },
                     menu: menu._id,
                     owner: user._id,
                     inventoryManagers: [],
@@ -270,8 +270,7 @@ export const getRestaurant = async (req: express.Request, res: express.Response)
 
                 res.status(200).send({
                     _id: restaurant._id,
-                    name: restaurant.name,
-                    englishName: restaurant.englishName,
+                    names: restaurant.names,
                     openDuring: restaurant.openDuring,
                     address: restaurant.address,
                     city: restaurant.city,

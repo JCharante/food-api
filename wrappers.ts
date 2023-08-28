@@ -60,7 +60,18 @@ export const assertTypesWrapper = async (req: express.Request, res: express.Resp
             return
         }
         if (req.body[type.field] !== undefined) {
+            // eslint-disable-next-line valid-typeof
             const isTypeValid = type.type === 'array' ? Array.isArray(req.body[type.field]) : typeof req.body[type.field] === type.type
+            // examine child values for objects
+            if (type.type === 'object' && type.values !== undefined) {
+                for (const key in req.body[type.field]) {
+                    // eslint-disable-next-line valid-typeof
+                    if (typeof req.body[type.field][key] !== type.values) {
+                        res.status(400).send(`Invalid ${type.field} value. (values of ${type.field} must be ${type.values})`)
+                        return
+                    }
+                }
+            }
             if (!isTypeValid) {
                 res.status(400).send(`Invalid type for ${type.field}, this is ${typeof req.body[type.field]}, expected ${type.type}`)
                 return

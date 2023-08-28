@@ -24,8 +24,7 @@ export const postMenuCategory = async (req: express.Request, res: express.Respon
      *
      * Body parameters:
      *
-     * name: string
-     * englishName: string (optional)
+     * names: Map<string,string>
      *
      */
     await errorWrapper(async () => {
@@ -33,15 +32,13 @@ export const postMenuCategory = async (req: express.Request, res: express.Respon
             await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
                 await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
                     await assertTypesWrapper(req, res, [
-                        { field: 'name', type: 'string', isRequired: true },
-                        { field: 'englishName', type: 'string', isRequired: false }
+                        { field: 'names', type: 'object', values: 'string', isRequired: true }
                     ], async () => {
                         await MongoDBSingleton.getInstance()
 
                         const category = new MenuCategoryV1({
                             restaurant: restaurant._id,
-                            name: req.body.name,
-                            englishName: req.body.englishName !== undefined ? req.body.englishName : null,
+                            names: req.body.names,
                             availability: null,
                             foodItems: []
                         })
@@ -79,8 +76,7 @@ export const patchMenuCategory = async (req: express.Request, res: express.Respo
      *
      * Body parameters:
      *
-     * name (optional)
-     * englishName (optional)
+     * names (optional)
      * foodItems (optional)
      */
     await errorWrapper(async () => {
@@ -88,8 +84,7 @@ export const patchMenuCategory = async (req: express.Request, res: express.Respo
             await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
                 await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
                     await assertTypesWrapper(req, res, [
-                        { field: 'name', type: 'string', isRequired: false },
-                        { field: 'englishName', type: 'string', isRequired: false }
+                        { field: 'names', type: 'object', values: 'string', isRequired: false }
                     ], async () => {
                         await MongoDBSingleton.getInstance()
 
@@ -100,12 +95,8 @@ export const patchMenuCategory = async (req: express.Request, res: express.Respo
                             return
                         }
 
-                        if (req.body.name !== undefined) {
-                            category.name = req.body.name
-                        }
-
-                        if (req.body.englishName !== undefined) {
-                            category.englishName = req.body.englishName
+                        if (req.body.names !== undefined) {
+                            category.names = req.body.names
                         }
 
                         if (req.body.foodItems !== undefined) {

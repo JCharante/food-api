@@ -59,8 +59,7 @@ export const postAddonCategory = async (req: express.Request, res: express.Respo
     /**
      * Create a food addon category
      * Body Arguments:
-     *  name
-     *  englishName (optional)
+     *  names
      *  type: 'multipleChoice' | 'pickOne'
      */
     await errorWrapper(async () => {
@@ -78,8 +77,7 @@ export const postAddonCategory = async (req: express.Request, res: express.Respo
                 }
 
                 const addonCategory = new FoodItemAddonCategoryV1({
-                    name: req.body.name,
-                    englishName: req.body.englishName !== undefined ? req.body.englishName : null,
+                    names: req.body.names,
                     restaurant: restaurant._id,
                     type: req.body.type,
                     addons: []
@@ -98,8 +96,7 @@ export const patchAddonCategory = async (req: express.Request, res: express.Resp
      * URL: /restaurant/:restaurant_id/food/addonCategory/:category_id/modify
      * Modify settings of a food addon category
      * Body parameters:
-     * name (optional)
-     * englishName (optional)
+     * names (optional)
      * type (optional)
      * pickOneRequiresSelection
      * pickOneDefaultValue
@@ -109,8 +106,7 @@ export const patchAddonCategory = async (req: express.Request, res: express.Resp
             await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
                 await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
                     await assertTypesWrapper(req, res, [
-                        { field: 'name', type: 'string', isRequired: false },
-                        { field: 'englishName', type: 'string', isRequired: false },
+                        { field: 'names', type: 'object', values: 'string', isRequired: false },
                         { field: 'type', type: 'string', isRequired: false },
                         { field: 'pickOneRequiresSelection', type: 'boolean', isRequired: false },
                         { field: 'pickOneDefaultValue', type: 'string', isRequired: false }
@@ -124,12 +120,8 @@ export const patchAddonCategory = async (req: express.Request, res: express.Resp
                             return
                         }
 
-                        if (req.body.name !== undefined) {
-                            category.name = req.body.name
-                        }
-
-                        if (req.body.englishName !== undefined) {
-                            category.englishName = req.body.englishName
+                        if (req.body.names !== undefined) {
+                            category.names = req.body.names
                         }
 
                         if (req.body.type !== undefined) {
@@ -202,10 +194,8 @@ export const postCreateAddon = async (req: express.Request, res: express.Respons
      *
      * Create a food addon
      * Body Arguments:
-     *  name
-     *  englishName (optional)
-     *  description (optional)
-     *  englishDescription (optional)
+     *  names
+     *  descriptions (optional)
      *  price
      */
     await errorWrapper(async () => {
@@ -219,10 +209,8 @@ export const postCreateAddon = async (req: express.Request, res: express.Respons
                 }
 
                 const addon = new FoodItemAddonV1({
-                    name: req.body.name,
-                    englishName: req.body.englishName !== undefined ? req.body.englishName : null,
-                    description: req.body.description,
-                    englishDescription: req.body.englishDescription !== undefined ? req.body.englishDescription : null,
+                    names: req.body.names,
+                    descriptions: req.body.descriptions,
                     restaurant: restaurant._id,
                     price: req.body.price
                 })

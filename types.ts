@@ -23,10 +23,8 @@ export interface ISessionKeyV1 {
 
 export interface IFoodItemAddonV1 {
     _id: mongoose.Types.ObjectId
-    name: string
-    englishName?: string
-    description?: string
-    englishDescription?: string
+    names: Map<languageCode, string>
+    descriptions?: Map<languageCode, string>
     restaurant: mongoose.Types.ObjectId
     price: number
     pictureID?: string
@@ -34,8 +32,7 @@ export interface IFoodItemAddonV1 {
 
 export interface IFoodItemAddonCategoryV1 {
     _id: mongoose.Types.ObjectId
-    name: string
-    englishName?: string
+    names: Map<languageCode, string>
     restaurant: mongoose.Types.ObjectId
     type: string
     addons: mongoose.Types.ObjectId[]
@@ -45,10 +42,8 @@ export interface IFoodItemAddonCategoryV1 {
 
 export interface IFoodItemV1 {
     _id: mongoose.Types.ObjectId
-    name: string
-    englishName?: string
-    description: string
-    englishDescription?: string
+    names: Map<languageCode, string>
+    descriptions: Map<languageCode, string>
     restaurant: mongoose.Types.ObjectId
     price: number
     inStock: boolean
@@ -75,8 +70,7 @@ export interface IAvailabilityZoneV1 {
 // Menu Category
 
 export interface IMenuCategoryV1 {
-    name: string
-    englishName?: string
+    names: Map<string, string>
     _id: mongoose.Types.ObjectId
     restaurant: mongoose.Types.ObjectId
     availability?: mongoose.Types.ObjectId
@@ -90,6 +84,8 @@ export type IMenuCategoryAPI = Modify<IMenuCategoryV1, {
 
 // Menu
 
+export type languageCode = 'vi' | 'en'
+
 export interface IMenuV1 {
     _id: mongoose.Types.ObjectId
     restaurant: mongoose.Types.ObjectId
@@ -99,10 +95,8 @@ export interface IMenuV1 {
 
 export interface IRestaurantV1 {
     _id: mongoose.Types.ObjectId
-    name: string
-    englishName?: string
-    description: string
-    englishDescription?: string
+    names: Map<languageCode, string>
+    descriptions: Map<languageCode, string>
     menu: mongoose.Types.ObjectId
     owner: mongoose.Types.ObjectId
     inventoryManagers: mongoose.Types.ObjectId[]
@@ -123,5 +117,6 @@ export interface IGeoJSONPoint {
 export interface IAssertTypesItemProps {
     field: string
     type: 'string' | 'number' | 'boolean' | 'object' | 'array'
+    values?: 'string'
     isRequired: boolean
 }

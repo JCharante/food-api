@@ -53,10 +53,8 @@ export const SessionKeyV1Schema = new Schema<ISessionKeyV1>({
 export const SessionKeyV1 = model<ISessionKeyV1>('SessionKeyV1', SessionKeyV1Schema)
 
 export const FoodItemAddonV1Schema = new Schema<IFoodItemAddonV1>({
-    name: { type: String, required: true },
-    englishName: { type: String },
-    description: { type: String },
-    englishDescription: { type: String },
+    names: { type: Map, of: String, required: true },
+    descriptions: { type: Map, of: String },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     price: { type: Number, required: true },
     pictureID: { type: String }
@@ -65,8 +63,7 @@ export const FoodItemAddonV1Schema = new Schema<IFoodItemAddonV1>({
 export const FoodItemAddonV1 = model<IFoodItemAddonV1>('FoodItemAddonV1', FoodItemAddonV1Schema)
 
 export const FoodItemAddonCategoryV1Schema = new Schema<IFoodItemAddonCategoryV1>({
-    name: { type: String, required: true },
-    englishName: { type: String },
+    names: { type: Map, of: String, required: true },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     type: { type: String, required: true },
     addons: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemAddonV1' },
@@ -77,10 +74,8 @@ export const FoodItemAddonCategoryV1Schema = new Schema<IFoodItemAddonCategoryV1
 export const FoodItemAddonCategoryV1 = model<IFoodItemAddonCategoryV1>('FoodItemAddonCategoryV1', FoodItemAddonCategoryV1Schema)
 
 export const FoodItemV1Schema = new Schema<IFoodItemV1>({
-    name: { type: String, required: true },
-    englishName: { type: String },
-    description: { type: String },
-    englishDescription: { type: String },
+    names: { type: Map, of: String, required: true },
+    descriptions: { type: Map, of: String, required: true },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     price: { type: Number, required: true },
     inStock: { type: Boolean, required: true },
@@ -104,8 +99,7 @@ export const AvailabilityZoneV1Schema = new Schema<IAvailabilityZoneV1>({
 export const AvailabilityZoneV1 = model<IAvailabilityZoneV1>('AvailabilityZoneV1', AvailabilityZoneV1Schema)
 
 export const MenuCategoryV1Schema = new Schema<IMenuCategoryV1>({
-    name: { type: String, required: true },
-    englishName: { type: String },
+    names: { type: Map, of: String, required: true },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
     availability: { type: mongoose.SchemaTypes.ObjectId, ref: 'AvailabilityZoneV1' },
     foodItems: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemV1' }
@@ -127,10 +121,8 @@ export const GeoJSONPointSchema = new Schema<IGeoJSONPoint>({
 })
 
 export const RestaurantV1Schema = new Schema<IRestaurantV1>({
-    name: { type: String, required: true },
-    englishName: { type: String },
-    description: { type: String },
-    englishDescription: { type: String },
+    names: { type: Map, of: String, required: true },
+    descriptions: { type: Map, of: String, required: true },
     menu: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: 'MenuV1' },
     owner: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: 'UserV1' },
     inventoryManagers: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'UserV1' },
