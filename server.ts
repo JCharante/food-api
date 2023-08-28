@@ -30,6 +30,7 @@ import {legacyRouter} from "./server/router/legacy";
 import {createContext, router, t } from "./server/router/trpc";
 import {userRouter} from "./server/router/user";
 import { expressHandler } from 'trpc-playground/handlers/express'
+import {searchRouter} from "./server/router/search";
 
 
 const app = express()
@@ -45,7 +46,8 @@ const perfObserver = new PerformanceObserver((items) => {
 perfObserver.observe({ entryTypes: ['measure'] })
 
 const namedRouters = router({
-    user: userRouter
+    user: userRouter,
+    search: searchRouter
 })
 
 export const appRouter = t.mergeRouters(legacyRouter, namedRouters)
