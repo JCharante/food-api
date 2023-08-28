@@ -7,6 +7,7 @@ import {
 } from "../../util/vonage"
 import {PrismaSingleton} from "../../database";
 import uuid4 from "uuid4";
+import {loggedInProcedure} from "./middleware";
 
 // TODO: add POW to prevent spamming
 // https://github.com/alexeichhorn/node-json-work-proof#readme
@@ -295,5 +296,8 @@ export const userRouter = router({
         return {
             sessionKey: sessionKey.key
         }
+    }),
+    userInfo: loggedInProcedure.query(async ({ ctx }) => {
+        return ctx.user.name
     })
 })
