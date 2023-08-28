@@ -23,8 +23,8 @@ export interface ISessionKeyV1 {
 
 export interface IFoodItemAddonV1 {
     _id: mongoose.Types.ObjectId
-    names: Map<languageCode, string>
-    descriptions?: Map<languageCode, string>
+    names: { [languageCode: string]: string }
+    descriptions?: { [languageCode: string]: string }
     restaurant: mongoose.Types.ObjectId
     price: number
     pictureID?: string
@@ -32,7 +32,7 @@ export interface IFoodItemAddonV1 {
 
 export interface IFoodItemAddonCategoryV1 {
     _id: mongoose.Types.ObjectId
-    names: Map<languageCode, string>
+    names: { [languageCode: string]: string }
     restaurant: mongoose.Types.ObjectId
     type: string
     addons: mongoose.Types.ObjectId[]
@@ -42,8 +42,8 @@ export interface IFoodItemAddonCategoryV1 {
 
 export interface IFoodItemV1 {
     _id: mongoose.Types.ObjectId
-    names: Map<languageCode, string>
-    descriptions: Map<languageCode, string>
+    names: { [languageCode: string]: string }
+    descriptions: { [languageCode: string]: string }
     restaurant: mongoose.Types.ObjectId
     price: number
     inStock: boolean
@@ -70,7 +70,7 @@ export interface IAvailabilityZoneV1 {
 // Menu Category
 
 export interface IMenuCategoryV1 {
-    names: Map<string, string>
+    names: { [languageCode: string]: string }
     _id: mongoose.Types.ObjectId
     restaurant: mongoose.Types.ObjectId
     availability?: mongoose.Types.ObjectId
@@ -96,7 +96,7 @@ export interface IMenuV1 {
 export interface IRestaurantV1 {
     _id: mongoose.Types.ObjectId
     names: { [languageCode: string]: string }
-    descriptions: Map<languageCode, string>
+    descriptions: { [languageCode: string]: string }
     menu: mongoose.Types.ObjectId
     owner: mongoose.Types.ObjectId
     inventoryManagers: mongoose.Types.ObjectId[]
