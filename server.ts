@@ -258,6 +258,51 @@ const appRouter = router({
             menu.categories = input.categories.map((id) => new mongoose.Types.ObjectId(id))
             await menu.save()
         }),
+    patchMenuCategory: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+            categoryID: z.string(),
+            names: z.optional(z.object({
+                en: z.string(),
+                vi: z.string()
+            })),
+            items: z.optional(
+                z.array(
+                    z.string()
+                )
+            )
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            await MongoDBSingleton.getInstance()
+
+            const category = await MenuCategoryV1.findOne({ _id: input.categoryID, restaurant: input.restaurantID })
+            if (!category) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'Category not found'
+                })
+            }
+
+            if (input.names) {
+                category.names = input.names
+            }
+            if (input.items) {
+                // Check all items belong to this restaurant
+                const foodItems = await FoodItemV1.find({ _id: { $in: input.items } })
+                for (const foodItem of foodItems) {
+                    if (foodItem.restaurant.toString() !== input.restaurantID) {
+                        throw new TRPCError({
+                            code: 'BAD_REQUEST',
+                            message: 'Food item doesn\'t belong to this restaurant'
+                        })
+                    }
+                }
+                category.foodItems = input.items.map((id) => new mongoose.Types.ObjectId(id))
+            }
+
+            category.save()
+        }),
     getRestaurantFoodItems: loggedInProcedure
         .input(z.object({
             restaurantID: z.string()
