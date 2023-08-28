@@ -35,6 +35,10 @@ app.post('/restaurant/:restaurant_id/availability', controller.restaurant.postAv
 
 app.patch('/restaurant/:restaurant_id/setHours', controller.restaurant.patchSetHours)
 
+app.post('/restaurant/:restaurant_id/food/category', controller.restaurant.food.categories.postMenuCategory)
+
+app.get('/restaurant/:restaurant_id/food/categories', controller.restaurant.food.categories.getMenuCategories)
+
 app.get('/restaurant/:restaurant_id/availabilityZones', controller.restaurant.getAvailabilityZones)
 
 app.post('/restaurant/:restaurant_id/food/foodItem', controller.restaurant.food.foodItems.postCreateFoodItem)
