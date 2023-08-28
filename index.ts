@@ -2,14 +2,13 @@
 
 import express from 'express'
 
+import * as controller from './controller/controller'
+
 const app = express()
 app.use(express.json())
 
-import * as controller from './controller/controller'
-
-
 app.get('/', (req: express.Request, res: express.Response) => {
-    res.send('Goodies API');
+  res.send('Goodies API')
 })
 
 app.get('/users', controller.admin.getUsers)
@@ -43,5 +42,5 @@ app.post('/signup/email', controller.user.postUserSignupWithEmail)
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config({ path: '.env.local' })
 app.listen(3000, () => {
-    console.log('The application is listening on port 3000!');
+  console.log('The application is listening on port 3000!')
 })

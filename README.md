@@ -1,5 +1,7 @@
 # goodies/api
 
+This repo uses the standard preset for eslint, minus a few rules to simplify development. 
+
 ## TODO List:
 
 - Refactor index.ts into multiple files

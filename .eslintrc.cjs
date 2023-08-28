@@ -1,16 +1,11 @@
 module.exports = {
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-    parser: '@typescript-eslint/parser',
-    plugins: ['@typescript-eslint'],
-    root: true,
-    rules: {
-        "no-extra-semi": "off", // have to disable the base rule if using the TS rule variant
-        "@typescript-eslint/no-extra-semi": "error",
-        '@typescript-eslint/no-empty-function': [
-            "error",
-            {
-                "allow": ["constructors"]
-            }
-        ],
+    extends: ['eslint-config-standard-with-typescript'],
+    parserOptions: {
+        project: './tsconfig.json'
     },
-};
+    rules: {
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-extraneous-class': 'off',
+    }
+}
