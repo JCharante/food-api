@@ -60,6 +60,7 @@ import express from 'express'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import * as trpcExpress from '@trpc/server/adapters/express'
+import * as s3 from './s3'
 
 import {
     FoodItemAddonCategoryV1,
@@ -563,6 +564,15 @@ const appRouter = router({
             await MongoDBSingleton.getInstance()
             const categories = await FoodItemAddonCategoryV1.find({ restaurant: input.restaurantID }).populate('addons')
             return JSON.parse(JSON.stringify(categories))
+        }),
+    postRestaurantImage: loggedInProcedure
+        .input(z.object({
+            restaurantID: z.string(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+            await requireIsRestaurantOwnerWrapperTRPC(ctx.user, input.restaurantID)
+            const req =  await s3.generatePresignedPostURL(input.restaurantID, 'restaurant', input.restaurantID)
+            return req
         })
 })
 

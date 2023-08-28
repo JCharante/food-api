@@ -1,13 +1,14 @@
 {
   "name": "@goodies-tech/api",
-  "version": "1.0.30",
+  "version": "1.0.32",
   "description": "",
   "main": "server.ts",
   "files": [
     "controller/",
     "server.ts",
     "database.ts",
-    "types.ts"
+    "types.ts",
+    "s3.ts"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -25,6 +26,7 @@
   "dependencies": {
     "@trpc/server": "^10.16.0",
     "@types/mongoose": "^5.11.97",
+    "aws-sdk": "^2.1346.0",
     "eslint-plugin-import": "^2.27.5",
     "mongoose": "^6.6.5",
     "zod": "^3.21.4"
