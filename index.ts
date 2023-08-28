@@ -15,6 +15,8 @@ app.get('/users', controller.admin.getUsers)
 
 app.get('/user/restaurants', controller.user.getUserRestaurants)
 
+app.get('/restaurants', controller.restaurant.getRestaurants)
+
 app.post('/user/restaurant', controller.restaurant.postNewRestaurant)
 
 app.post('/restaurant/:restaurant_id/food/addon', controller.restaurant.food.addons.postCreateAddon)

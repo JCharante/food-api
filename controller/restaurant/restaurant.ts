@@ -202,3 +202,31 @@ export const patchSetHours = async (req: express.Request, res: express.Response)
         })
     })
 }
+
+export const getRestaurants = async (req: express.Request, res: express.Response) => {
+    /**
+     * URL: /restaurants
+     *
+     * Query parameters:
+     * sortBy = 'location'
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+            await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+                // TODO: log activity from user
+                await MongoDBSingleton.getInstance()
+
+                let restaurants: IRestaurantV1[] = []
+
+                // Sort by name
+                restaurants = await RestaurantV1
+                    .find({ isVisible: true, isVerified: true, hiddenByAdmin: false })
+                    .sort({ name: 'asc' })
+                    .populate('menu')
+                    .populate('openDuring')
+
+                res.status(200).send(restaurants)
+            })
+        })
+    })
+}
