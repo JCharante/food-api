@@ -3,7 +3,7 @@ import { errorWrapper, getUserWrapper, requiresValidSessionKeyWrapper } from '..
 import { IUserV1 } from '../../types'
 import { AvailabilityZoneV1, MenuV1, MongoDBSingleton, RestaurantV1 } from '../../database'
 
-export * as food from './food/food'
+export * as food from './food/index'
 
 export const postAvailability = async (req: express.Request, res: express.Response) => {
   /**
