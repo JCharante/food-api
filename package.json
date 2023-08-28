@@ -2,13 +2,14 @@
   "name": "@goodies-tech/api",
   "version": "1.0.38",
   "description": "",
-  "main": "server.ts",
+  "main": "index.ts",
   "files": [
     "controller/",
     "server.ts",
     "database.ts",
     "types.ts",
-    "s3.ts"
+    "s3.ts",
+    "index.ts"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -149,7 +149,7 @@ const appRouter = router({
         const restaurants = await RestaurantV1.find({ owner: user._id }).populate('menu')
         const restaurantsWithPictures = await Promise.all(restaurants.map(async (restaurant) => {
             const newObj = {
-                ...restaurant.toJSON(),
+                ...restaurant.toObject({ flattenMaps: true }),
                 pictureURL: "https://placekitten.com/250/250"
             }
             if (await s3.resourceExists(restaurant._id.toString(), 'restaurant', restaurant._id.toString())) {
@@ -157,7 +157,13 @@ const appRouter = router({
             }
             return newObj
         }))
-        return restaurantsWithPictures
+        const ret = restaurantsWithPictures.map((restaurant) => {
+            return {
+                ...restaurant,
+                _id: restaurant._id.toString()
+            }
+        })
+        return ret
     }),
     getRestaurantCategories: loggedInProcedure
         .input(z.object({
