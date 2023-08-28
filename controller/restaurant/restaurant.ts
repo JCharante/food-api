@@ -1,12 +1,12 @@
 import express from 'express'
 import {
-  errorWrapper,
-  getUserWrapper,
-  requireIsRestaurantOwnerWrapper,
-  requiresValidSessionKeyWrapper
+    errorWrapper,
+    getUserWrapper,
+    requireIsRestaurantOwnerWrapper,
+    requiresValidSessionKeyWrapper
 } from '../../wrappers'
-import { IRestaurantV1, IUserV1 } from '../../types'
-import { AvailabilityZoneV1, MenuV1, MongoDBSingleton, RestaurantV1 } from '../../database'
+import {IRestaurantV1, IUserV1} from '../../types'
+import {AvailabilityZoneV1, MenuV1, MongoDBSingleton, RestaurantV1} from '../../database'
 
 export * as food from './food/index'
 
@@ -149,6 +149,54 @@ export const getAvailabilityZones = async (req: express.Request, res: express.Re
           const availabilityZones = await AvailabilityZoneV1.find({ restaurant: restaurant._id })
 
           res.status(200).send(availabilityZones)
+        })
+      })
+    })
+  })
+}
+
+export const patchSetHours = async (req: express.Request, res: express.Response) => {
+  /**
+   * URL: /restaurant/:restaurant_id/setHours
+   *
+   * Set the restaurant hours by providing an array of availability zone IDs
+   *
+   * Body parameters:
+   *
+   * availabilityZones [string]
+   */
+  await errorWrapper(async () => {
+    await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+      await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+        await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+          // Check input
+          if (req.body.availabilityZones === undefined) {
+            res.status(400).send('Missing availabilityZones')
+            return
+          }
+          for (const availabilityZoneId of req.body.availabilityZones) {
+            if (typeof availabilityZoneId !== typeof 'string') {
+              res.status(400).send('Invalid availability zone ID')
+              return
+            }
+          }
+          // Verify availability zones exist and belong to restaurant
+          await MongoDBSingleton.getInstance()
+          for (const availabilityZoneId of req.body.availabilityZones) {
+            const availabilityZone = await AvailabilityZoneV1.findOne({ _id: availabilityZoneId })
+            if (availabilityZone == null || availabilityZone.restaurant.toString() !== restaurant._id.toString()) {
+              res.status(400).send('Invalid availability zone ID (does not belong to your restaurant)')
+              return
+            }
+          }
+            const targetRestaurant = await RestaurantV1.findOne({ _id: restaurant._id })
+            if (targetRestaurant == null) {
+                res.status(400).send('Restaurant not found')
+                return
+            }
+            targetRestaurant.openDuring = req.body.availabilityZones
+          await targetRestaurant.save()
+            res.status(200).send('OK')
         })
       })
     })
