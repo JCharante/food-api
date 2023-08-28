@@ -32,6 +32,21 @@ Examples
 
 https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate#second-migration-add-new-fields
 
+### Migrations missing from local directory
+
+```
+The following migration(s) are applied to the database but missing from the local migrations directory: 20230801135436_added_postgis_extension
+```
+
+If you know what you're doing, you can delete the migration records from the DB
+
+https://stackoverflow.com/a/60703157
+
+### Postgis Indexes
+
+https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate/include-unsupported-database-features
+
+
 ## Manual Testing
 
 In addition to the app, you can use trpc playground to test the API [link](http://localhost:3000/trpc-playground)

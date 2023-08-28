@@ -31,15 +31,16 @@ import {createContext, router, t } from "./server/router/trpc";
 import {userRouter} from "./server/router/user";
 import { expressHandler } from 'trpc-playground/handlers/express'
 import {searchRouter} from "./server/router/search";
+import {geoRouter} from "./server/router/geo";
 
 
 const app = express()
 
-app.use(morgan('combined'))
+app.use(morgan('dev'))
 
 const perfObserver = new PerformanceObserver((items) => {
     items.getEntries().forEach((entry) => {
-        console.log(entry)
+        //console.log(entry)
     })
 })
 
@@ -47,7 +48,8 @@ perfObserver.observe({ entryTypes: ['measure'] })
 
 const namedRouters = router({
     user: userRouter,
-    search: searchRouter
+    search: searchRouter,
+    geo: geoRouter
 })
 
 export const appRouter = t.mergeRouters(legacyRouter, namedRouters)

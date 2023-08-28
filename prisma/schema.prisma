@@ -8,152 +8,161 @@ datasource db {
 }
 
 model FoodAddon {
-  id Int @id @default(autoincrement())
-  names Json?
+  id           Int                 @id @default(autoincrement())
+  names        Json?
   descriptions Json?
-  inStock Boolean
-  price Int
-  visible Boolean
+  inStock      Boolean
+  price        Int
+  visible      Boolean
   restaurantID Int
-  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  restaurant   Restaurant          @relation(fields: [restaurantID], references: [id])
   // many-to-many
-  categories FoodAddonCategory[]
+  categories   FoodAddonCategory[]
 }
 
 model FoodAddonCategory {
-  id Int @id @default(autoincrement())
-  names Json?
-  type String
-  addons FoodAddon[]
+  id           Int         @id @default(autoincrement())
+  names        Json?
+  type         String
+  addons       FoodAddon[]
   restaurantID Int
-  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantID], references: [id])
   // many-to-many
-  foods Food[]
+  foods        Food[]
 }
 
 model Food {
-  id Int @id @default(autoincrement())
-  names Json?
-  descriptions Json?
-  inStock Boolean
-  visible Boolean
-  price Int
-  restaurantID Int
-  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  id             Int                 @id @default(autoincrement())
+  names          Json?
+  descriptions   Json?
+  inStock        Boolean
+  visible        Boolean
+  price          Int
+  restaurantID   Int
+  restaurant     Restaurant          @relation(fields: [restaurantID], references: [id])
   // unused
-  pictureURL String @default("")
+  pictureURL     String              @default("")
   // many-to-many
-  addons FoodAddonCategory[]
+  addons         FoodAddonCategory[]
   menuCategories MenuCategory[]
 }
 
 model MenuCategory {
-  id Int @id @default(autoincrement())
-  names Json?
-  descriptions Json?
+  id                Int                @id @default(autoincrement())
+  names             Json?
+  descriptions      Json?
   // one-to-many
-  restaurantID Int
-  restaurant Restaurant @relation(fields: [restaurantID], references: [id])
+  restaurantID      Int
+  restaurant        Restaurant         @relation(fields: [restaurantID], references: [id])
   // many-to-many
-  foods Food[]
+  foods             Food[]
   availabilityZones AvailabilityZone[]
-  menus Menu[]
+  menus             Menu[]
 }
 
 model Menu {
-  id Int @id @default(autoincrement())
-  restaurant Restaurant? @relation("ActiveRestaurantMenu")
+  id                 Int            @id @default(autoincrement())
+  restaurant         Restaurant?    @relation("ActiveRestaurantMenu")
   owningRestaurantID Int
-  owningRestaurant Restaurant @relation("RestaurantMenus", fields: [owningRestaurantID], references: [id])
-  categories MenuCategory[]
+  owningRestaurant   Restaurant     @relation("RestaurantMenus", fields: [owningRestaurantID], references: [id])
+  categories         MenuCategory[]
 }
 
 model AvailabilityZone {
-  id Int @id @default(autoincrement())
-  daysOfWeek Json?
-  endHour Int
-  endMinute Int
-  name String
+  id             Int            @id @default(autoincrement())
+  daysOfWeek     Json?
+  endHour        Int
+  endMinute      Int
+  name           String
   menuCategories MenuCategory[]
 
   // Restaurant that uses this AZ to describe opening hours
   restaurantOpeningHourID Int?
-  restaurantOpeningHour Restaurant? @relation(name: "OpeningHours", fields: [restaurantOpeningHourID], references: [id])
+  restaurantOpeningHour   Restaurant? @relation(name: "OpeningHours", fields: [restaurantOpeningHourID], references: [id])
   // Which Restaurant "owns" this Document
-  restaurantOwnerID  Int
-  restaurantOwner Restaurant @relation(name: "RestaurantAZs", fields: [restaurantOwnerID], references: [id])
+  restaurantOwnerID       Int
+  restaurantOwner         Restaurant  @relation(name: "RestaurantAZs", fields: [restaurantOwnerID], references: [id])
 }
 
 model RestaurantPosition {
-  id Int @id @default(autoincrement())
-  latitude Float
-  longitude Float
-  restaurantID Int? @unique
-  restaurant Restaurant? @relation(fields: [restaurantID], references: [id])
+  id           Int         @id @default(autoincrement())
+  latitude     Float
+  longitude    Float
+  restaurantID Int?        @unique
+  restaurant   Restaurant? @relation(fields: [restaurantID], references: [id])
 }
 
 model RestaurantCategory {
-  id Int @id @default(autoincrement())
-  names Json?
-  iconName String
+  id          Int          @id @default(autoincrement())
+  names       Json?
+  iconName    String
   // Many to Many
   restaurants Restaurant[] @relation("RestaurantCategories")
 }
 
 model Restaurant {
-  id Int @id @default(autoincrement())
-  address String
-  city String
-  descriptions Json?
-  hiddenByAdmin Boolean
-  isVerified Boolean
-  isVisible Boolean
-  names Json?
-  position RestaurantPosition?
+  id                   Int                  @id @default(autoincrement())
+  address              String
+  city                 String
+  descriptions         Json?
+  hiddenByAdmin        Boolean
+  isVerified           Boolean
+  isVisible            Boolean
+  names                Json?
+  position             RestaurantPosition?
   // One to One
-  menuID Int @unique
-  menu Menu @relation(name: "ActiveRestaurantMenu", fields: [menuID], references: [id])
-  ownerID Int
-  owner User @relation(name: "RestaurantOwner", fields: [ownerID], references: [id])
+  menuID               Int                  @unique
+  menu                 Menu                 @relation(name: "ActiveRestaurantMenu", fields: [menuID], references: [id])
+  ownerID              Int
+  owner                User                 @relation(name: "RestaurantOwner", fields: [ownerID], references: [id])
   // Many to Many
-  inventoryManagers User[] @relation("RestaurantManager")
+  inventoryManagers    User[]               @relation("RestaurantManager")
   restaurantCategories RestaurantCategory[] @relation("RestaurantCategories")
   // One to Many (restaurant is the one)
-  availabilityZones AvailabilityZone[] @relation("RestaurantAZs")
-  openingHours AvailabilityZone[] @relation("OpeningHours")
-  foodAddons FoodAddon[]
-  foodAddonCategories FoodAddonCategory[]
-  foods Food[]
-  menuCategories MenuCategory[]
-  menus Menu[] @relation("RestaurantMenus")
+  availabilityZones    AvailabilityZone[]   @relation("RestaurantAZs")
+  openingHours         AvailabilityZone[]   @relation("OpeningHours")
+  foodAddons           FoodAddon[]
+  foodAddonCategories  FoodAddonCategory[]
+  foods                Food[]
+  menuCategories       MenuCategory[]
+  menus                Menu[]               @relation("RestaurantMenus")
 }
 
 model SessionKey {
-  id Int @id @default(autoincrement())
-  key String @unique
+  id     Int    @id @default(autoincrement())
+  key    String @unique
   userId Int
-  user User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  email String @default("")
-  isAdmin Boolean
-  isMerchant Boolean
-  name String
-  password String
-  phoneNumber String @default("")
-  extraInfo Json @default("{}")
+  id          Int     @id @default(autoincrement())
+  email       String  @default("")
+  isAdmin     Boolean
+  isMerchant  Boolean
+  name        String
+  password    String
+  phoneNumber String  @default("")
+  extraInfo   Json    @default("{}")
 
-  ownedRestaurants Restaurant[] @relation("RestaurantOwner")
+  ownedRestaurants    Restaurant[] @relation("RestaurantOwner")
   managerOfRestaurant Restaurant[] @relation("RestaurantManager")
-  sessionKeys SessionKey[]
+  sessionKeys         SessionKey[]
 }
 
 model UserVerifyRequest {
-  vonageRequestId String @id
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  phoneNumber String
-  success Boolean @default(false)
+  vonageRequestId String   @id
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  phoneNumber     String
+  success         Boolean  @default(false)
+}
+
+model Geocache {
+  id         Int                     @id @default(autoincrement())
+  location   Unsupported("Geometry")
+  results    Json                    @default("[]")
+  insertedOn DateTime                @default(now())
+
+  @@index([location], type: Gist)
 }
