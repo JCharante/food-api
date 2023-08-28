@@ -1,5 +1,6 @@
 import {MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1} from "./database";
 import {IAssertTypesItemProps, IRestaurantV1, IUserV1} from "./types";
+import express from "express"
 
 export const errorWrapper = async (fn: () => Promise<void>) => {
     try {
@@ -9,7 +10,7 @@ export const errorWrapper = async (fn: () => Promise<void>) => {
     }
 }
 
-export const requiresValidSessionKeyWrapper = async (req: any, res: any, fn: (canonical_id: string) => Promise<void>) => {
+export const requiresValidSessionKeyWrapper = async (req: express.Request, res: express.Response, fn: (canonical_id: string) => Promise<void>) => {
     if (!req.headers.authorization) {
         res.status(401).send('Unauthorized')
         return
@@ -32,7 +33,7 @@ export const requiresValidSessionKeyWrapper = async (req: any, res: any, fn: (ca
     await fn(sessionKey.canonical_id)
 }
 
-export const getUserWrapper = async (req: any, res: any, canonical_id: string, fn: (user: IUserV1) => Promise<void>) => {
+export const getUserWrapper = async (req: express.Request, res: express.Response, canonical_id: string, fn: (user: IUserV1) => Promise<void>) => {
     await MongoDBSingleton.getInstance()
 
     const user = await UserV1.findOne({ canonical_id })
@@ -43,7 +44,7 @@ export const getUserWrapper = async (req: any, res: any, canonical_id: string, f
     await fn(user)
 }
 
-export const requireIsRestaurantOwnerWrapper = async (req: any, res: any, user: IUserV1, fn: (restaurant: IRestaurantV1) => Promise<void>) => {
+export const requireIsRestaurantOwnerWrapper = async (req: express.Request, res: express.Response, user: IUserV1, fn: (restaurant: IRestaurantV1) => Promise<void>) => {
     await MongoDBSingleton.getInstance()
     const restaurant = await RestaurantV1.findOne({ _id: req.params.restaurant_id })
     if (!restaurant || restaurant.owner.toString() !== user._id.toString()) {
@@ -53,7 +54,7 @@ export const requireIsRestaurantOwnerWrapper = async (req: any, res: any, user: 
     await fn(restaurant)
 }
 
-export const assertTypesWrapper = async (req: any, res: any, types: IAssertTypesItemProps[], fn: () => Promise<void>) => {
+export const assertTypesWrapper = async (req: express.Request, res: express.Response, types: IAssertTypesItemProps[], fn: () => Promise<void>) => {
     for (const type of types) {
         if (type.isRequired && !req.body[type.field]) {
             res.status(400).send(`Missing ${type.field}`)

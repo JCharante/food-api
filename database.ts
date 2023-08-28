@@ -16,7 +16,7 @@ import {
 
 export class MongoDBSingleton {
     private static instance: MongoDBSingleton;
-    private constructor() { }
+    private constructor() {}
 
     public static async getInstance() {
         if (!MongoDBSingleton.instance) {

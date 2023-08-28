@@ -3,9 +3,7 @@ import {errorWrapper, getUserWrapper, requiresValidSessionKeyWrapper} from "../.
 import {IRestaurantV1, IUserV1} from "../../types";
 import {MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1} from "../../database";
 import uuid4 from "uuid4";
-
-
-const bcrypt = require('bcrypt')
+import bcrypt from 'bcrypt'
 
 export const getUserRestaurants = async (req: express.Request, res: express.Response) => {
     /**
@@ -129,6 +127,12 @@ export const postLoginWithEmail = async (req: express.Request, res: express.Resp
 
         if (!user) {
             res.status(404).send('Email not found')
+            return
+        }
+
+        if (!user.password) {
+            // User didn't previously sign in with a password (social media login probably)
+            res.status(400).send('User did not previously sign in with a password')
             return
         }
 

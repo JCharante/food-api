@@ -1,9 +1,9 @@
 'use strict'
 
-import express from 'express';
+import express from 'express'
 
-const app = express();
-app.use(express.json());
+const app = express()
+app.use(express.json())
 
 import * as controller from './controller/controller'
 
@@ -40,6 +40,7 @@ app.delete('/logout/all', controller.user.deleteUserAllSessionKeys)
 
 app.post('/signup/email', controller.user.postUserSignupWithEmail)
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config({ path: '.env.local' })
 app.listen(3000, () => {
     console.log('The application is listening on port 3000!');

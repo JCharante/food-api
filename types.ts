@@ -115,6 +115,6 @@ export interface IGeoJSONPoint {
 
 export interface IAssertTypesItemProps {
     field: string,
-    type: any,
+    type: 'string' | 'number' | 'boolean' | 'object' | 'array',
     isRequired: boolean
 }
