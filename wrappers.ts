@@ -59,10 +59,12 @@ export const assertTypesWrapper = async (req: express.Request, res: express.Resp
             res.status(400).send(`Missing ${type.field}`)
             return
         }
-
-    if (req.body[type.field] !== undefined && (typeof req.body[type.field] !== type.type)) { // eslint-disable-line
-            res.status(400).send(`Invalid type for ${type.field}`)
-            return
+        if (req.body[type.field] !== undefined) {
+            const isTypeValid = type.type === 'array' ? Array.isArray(req.body[type.field]) : typeof req.body[type.field] === type.type
+            if (!isTypeValid) {
+                res.status(400).send(`Invalid type for ${type.field}, this is ${typeof req.body[type.field]}, expected ${type.type}`)
+                return
+            }
         }
     }
     await fn()
