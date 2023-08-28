@@ -396,6 +396,27 @@ const requireIsRestaurantOwnerWrapper = async (req: any, res: any, user: IUserV1
     await fn(restaurant)
 }
 
+interface IAssertTypesItemProps {
+    field: string,
+    type: any,
+    isRequired: boolean
+}
+
+const assertTypesWrapper = async (req: any, res: any, types: IAssertTypesItemProps[], fn: () => Promise<void>) => {
+    for (const type of types) {
+        if (type.isRequired && !req.body[type.field]) {
+            res.status(400).send(`Missing ${type.field}`)
+            return
+        }
+
+        if (req.body[type.field] && typeof req.body[type.field] !== type.type) {
+            res.status(400).send(`Invalid type for ${type.field}`)
+            return
+        }
+    }
+    await fn()
+}
+
 app.get('/users', async (req, res) => {
     await errorWrapper(async () => {
         await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
@@ -599,6 +620,70 @@ app.post('/restaurant/:restaurant_id/food/addonCategory', async (req, res) => {
                 await addonCategory.save()
 
                 res.status(200).send('OK')
+            })
+        })
+    })
+})
+
+
+app.patch('/restaurant/:restaurant_id/food/addonCategory/:category_id/modify', async (req, res) => {
+    /**
+     * Modify settings of a food addon category
+     * Body parameters:
+     * name (optional)
+     * englishName (optional)
+     * type (optional)
+     * pickOneRequiresSelection
+     * pickOneDefaultValue
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonical_id: string) => {
+            await getUserWrapper(req, res, canonical_id, async (user: IUserV1) => {
+                await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
+                    await assertTypesWrapper(req, res, [
+                        { field: 'name', type: 'string', isRequired: false },
+                        { field: 'englishName', type: 'string', isRequired: false },
+                        { field: 'type', type: 'string', isRequired: false },
+                        { field: 'pickOneRequiresSelection', type: 'boolean', isRequired: false },
+                        { field: 'pickOneDefaultValue', type: 'string', isRequired: false }
+                    ], async () => {
+                        await MongoDBSingleton.getInstance()
+
+                        const category = await FoodItemAddonCategoryV1.findOne({ _id: req.params.category_id, restaurant: restaurant._id })
+
+                        if (!category) {
+                            res.status(404).send('Category not found')
+                            return
+                        }
+
+                        if (req.body.name) {
+                            category.name = req.body.name
+                        }
+
+                        if (req.body.englishName) {
+                            category.englishName = req.body.englishName
+                        }
+
+                        if (req.body.type) {
+                            if (req.body.type !== 'multipleChoice' && req.body.type !== 'pickOne') {
+                                res.status(400).send('Invalid value for type (must be multipleChoice or pickOne)')
+                                return
+                            }
+                            category.type = req.body.type
+                        }
+
+                        if(req.body.pickOneRequiresSelection) {
+                            category.pickOneRequiresSelection = req.body.pickOneRequiresSelection
+                        }
+
+                        if (req.body.pickOneDefaultValue) {
+                            category.pickOneDefaultValue = req.body.pickOneDefaultValue
+                        }
+
+                        await category.save()
+                        res.status(200).send('OK')
+                    })
+                })
             })
         })
     })
