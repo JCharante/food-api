@@ -1,28 +1,11 @@
 'use strict'
 
 import express from 'express';
-const bcrypt = require('bcrypt')
-import uuid4 from 'uuid4'
-import { errorWrapper, getUserWrapper, requiresValidSessionKeyWrapper, requireIsRestaurantOwnerWrapper } from './wrappers'
-import {IRestaurantV1, IUserV1} from "./types";
-import {
-    AvailabilityZoneV1, FoodItemAddonCategoryV1,
-    FoodItemAddonV1,
-    MenuV1,
-    MongoDBSingleton,
-    RestaurantV1,
-    SessionKeyV1,
-    UserV1
-} from "./database";
-let adminTokenObtained = false
-let adminToken = ''
 
 const app = express();
 app.use(express.json());
 
 import * as controller from './controller/controller'
-import {getAddonCategories, postAddAddonToCategory, postCreateAddon} from "./controller/restaurant/food/addons";
-
 
 
 app.get('/', (req: express.Request, res: express.Response) => {
