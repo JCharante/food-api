@@ -1,6 +1,16 @@
-# goodies/api
+# food-api
 
 This repo uses the standard preset for eslint, minus a few rules to simplify development. 
+
+## Context
+
+I was previously working on building a food-delivery app targeting a specific niche, but with my business partner decided to stop. I still enjoy working in this tech stack, so I plan to continue developing
+this app for recreational purposes and now am able to make the source code publicly available.
+
+This repo was previously hosted on a different service and my other laptop has a different git author identity, so I ran `git rebase -r --root --exec "git commit --amend --no-edit --reset-author"`, which reset the commit times. Additionally past commit names make references to an internal issue board that won't be published. 
+
+Companion repo: https://github.com/JCharante/food-app
+
 
 ## TODO List:
 
