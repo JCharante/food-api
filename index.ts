@@ -4,7 +4,11 @@ import express from 'express'
 
 import * as controller from './controller/controller'
 
+import morgan from 'morgan'
+
 const app = express()
+
+app.use(morgan('combined'))
 app.use(express.json())
 
 app.get('/', (req: express.Request, res: express.Response) => {
@@ -50,6 +54,6 @@ app.get('/users', controller.admin.getUsers)
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config({ path: '.env.local' })
-app.listen(3000, () => {
+app.listen(3000, '0.0.0.0', () => {
     console.log('The application is listening on port 3000!')
 })

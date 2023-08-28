@@ -250,7 +250,11 @@ export const getRestaurant = async (req: express.Request, res: express.Response)
                             populate: {
                                 path: 'categories',
                                 populate: {
-                                    path: 'foodItems'
+                                    path: 'foodItems',
+                                    populate: {
+                                        path: 'addons',
+                                        populate: 'addons'
+                                    }
                                 }
                             }
                         },

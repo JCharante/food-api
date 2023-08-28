@@ -124,7 +124,7 @@ export const postLoginWithEmail = async (req: express.Request, res: express.Resp
     try {
         await MongoDBSingleton.getInstance()
 
-        const user = await UserV1.findOne({ email: req.body.email })
+        const user = await UserV1.findOne({ email: req.body.email.toLowerCase() })
 
         if (user == null) {
             res.status(404).send('Email not found')

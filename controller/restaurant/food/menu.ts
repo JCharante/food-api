@@ -43,7 +43,7 @@ export const patchMenu = async (req: express.Request, res: express.Response) => 
                             for (const category of req.body.categories) {
                                 const cat = await MenuCategoryV1.findOne({ _id: category, restaurant: restaurant._id })
                                 if (cat === null) {
-                                    res.status(400).send('Bad request categories')
+                                    res.status(400).send(`Bad request categories, a category was not found, ${category}`)
                                     return
                                 }
                             }

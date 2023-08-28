@@ -9,6 +9,8 @@ import { FoodItemV1, MenuCategoryV1, MongoDBSingleton } from '../../../database'
 import { IRestaurantV1, IUserV1 } from '../../../types'
 import express from 'express'
 
+// TODO: Need endpoint to delete category
+
 export const postMenuCategory = async (req: express.Request, res: express.Response) => {
     /**
      *
@@ -63,7 +65,7 @@ export const getMenuCategories = async (req: express.Request, res: express.Respo
             await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
                 await requireIsRestaurantOwnerWrapper(req, res, user, async (restaurant: IRestaurantV1) => {
                     await MongoDBSingleton.getInstance()
-                    const menuCategories = await MenuCategoryV1.find({ restaurant: restaurant._id })
+                    const menuCategories = await MenuCategoryV1.find({ restaurant: restaurant._id }).populate('foodItems')
                     res.status(200).send(menuCategories)
                 })
             })
