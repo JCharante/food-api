@@ -27,7 +27,7 @@ export const userRouter = router({
             const requestDate = new Date(request.createdAt)
             const diff = now.getTime() - requestDate.getTime()
             const diffMinutes = Math.floor(diff / 1000 / 60)
-            if (diffMinutes < 10) {
+            if (!request.success && diffMinutes < 10) { // TODO: fine tune this
                 throw new Error('There is an outstanding request for this phone number')
             } else {
                 // delete old request
@@ -95,6 +95,7 @@ export const userRouter = router({
      * This is the third step in the auth process, you check if an account exists with this phone number
      * if it does, then you'll need to get the PIN from the user for the next step, or
      * you'll need to gather user information and create a new account in the next step
+     * Third case: account exists but is not protected by PIN, so move onto step 4.
      */
     phoneNumberStatus: t.procedure.input(z.object({
         vonageRequestId: z.string(),
@@ -139,12 +140,14 @@ export const userRouter = router({
         return {
             requestId: input.vonageRequestId,
             phoneNumber: input.phoneNumber,
-            accountExists: user !== null
+            accountExists: user !== null,
+            requiresPIN: user !== null && user.password.length > 0
         }
     }),
     /**
      * This is the fourth step in the auth process, you check if you have the correct PIN for
-     * this account, and if so then you will get a session key for this user
+     * this account, and if so then you will get a session key for this user.
+     * If the PIN is not set on the account, then a request with a PIN 000000 will be accepted.
      */
     checkPIN: t.procedure.input(z.object({
         phoneNumber: z.string().min(10).max(14).regex(/^\d+$/),
@@ -191,7 +194,11 @@ export const userRouter = router({
             throw new Error('Account does not exist')
         }
 
-        if (user.password !== input.pin) {
+        if (user.password.length === 0) {
+            if (input.pin !== '000000') {
+                throw new Error('Account PIN not set and given PIN is not 000000')
+            }
+        } else if (user.password !== input.pin) {
             throw new Error('PIN does not match')
         }
 
