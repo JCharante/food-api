@@ -23,6 +23,8 @@ app.post('/user/restaurant', controller.restaurant.postNewRestaurant)
 
 app.post('/restaurant/:restaurant_id/food/addon', controller.restaurant.food.addons.postCreateAddon)
 
+app.patch('/restaurant/:restaurant_id/food/menu', controller.restaurant.food.menu.patchMenu)
+
 app.get('/restaurant/:restaurant_id/food/addons', controller.restaurant.food.addons.getAddons)
 
 app.get('/restaurant/:restaurant_id/food/addonCategories', controller.restaurant.food.addons.getAddonCategories)
