@@ -7,10 +7,10 @@ const prisma = new PrismaClient();
         const salt = await bcrypt.genSalt(10)
         const user = await prisma.user.create({
             data: {
-                email: 'john@jcharante.com',
+                email: '',
                 isAdmin: false,
                 isMerchant: false,
-                name: 'John Z',
+                name: 'John',
                 password: await bcrypt.hash('12345678', salt)
             }
         })
