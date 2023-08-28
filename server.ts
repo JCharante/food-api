@@ -124,10 +124,11 @@ const t = initTRPC.context<Context>().create()
 const router = t.router
 // const publicProcedure = t.procedure
 
-const isAuthedUser = t.middleware(async ({ next, ctx }) => {
+const isAuthedUser = t.middleware(async ({ next, ctx, path }) => {
     if (ctx.blob === null) {
         throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
+    console.log(`Request from ${ctx.blob.canonicalId} ${path}`)
     return await next({
         ctx: {
             user: ctx.blob.user,
@@ -317,6 +318,8 @@ const appRouter = router({
             }
 
             if (input.addons) {
+                // deduplicate the addons list
+                input.addons = [...new Set(input.addons)]
                 // make sure all given values exist and belong to restaurant
                 const addons = await FoodItemAddonV1.find({
                     _id: {
