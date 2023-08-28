@@ -17,6 +17,8 @@ app.get('/user/restaurants', controller.user.getUserRestaurants)
 
 app.get('/restaurants', controller.restaurant.getRestaurants)
 
+app.get('/restaurant/:restaurant_id', controller.restaurant.getRestaurant)
+
 app.post('/user/restaurant', controller.restaurant.postNewRestaurant)
 
 app.post('/restaurant/:restaurant_id/food/addon', controller.restaurant.food.addons.postCreateAddon)
@@ -36,6 +38,8 @@ app.post('/restaurant/:restaurant_id/availability', controller.restaurant.postAv
 app.patch('/restaurant/:restaurant_id/setHours', controller.restaurant.patchSetHours)
 
 app.post('/restaurant/:restaurant_id/food/category', controller.restaurant.food.categories.postMenuCategory)
+
+app.patch('/restaurant/:restaurant_id/food/category/:category_id', controller.restaurant.food.categories.patchMenuCategory)
 
 app.get('/restaurant/:restaurant_id/food/categories', controller.restaurant.food.categories.getMenuCategories)
 

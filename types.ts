@@ -72,6 +72,7 @@ export interface IMenuCategoryV1 {
     englishName?: string
     restaurant: mongoose.Types.ObjectId
     availability?: mongoose.Types.ObjectId
+    foodItems: mongoose.Types.ObjectId[]
 }
 
 export interface IMenuV1 {

@@ -107,7 +107,8 @@ export const MenuCategoryV1Schema = new Schema<IMenuCategoryV1>({
     name: { type: String, required: true },
     englishName: { type: String },
     restaurant: { type: mongoose.SchemaTypes.ObjectId, required: true },
-    availability: { type: mongoose.SchemaTypes.ObjectId, ref: 'AvailabilityZoneV1' }
+    availability: { type: mongoose.SchemaTypes.ObjectId, ref: 'AvailabilityZoneV1' },
+    foodItems: { type: [mongoose.SchemaTypes.ObjectId], required: true, ref: 'FoodItemV1' }
 })
 
 export const MenuCategoryV1 = model<IMenuCategoryV1>('MenuCategoryV1', MenuCategoryV1Schema)

@@ -229,3 +229,40 @@ export const getRestaurants = async (req: express.Request, res: express.Response
         })
     })
 }
+
+export const getRestaurant = async (req: express.Request, res: express.Response) => {
+    /**
+     * URL: /restaurant/:restaurant_id
+     *
+     * Get a restaurant
+     */
+    await errorWrapper(async () => {
+        await requiresValidSessionKeyWrapper(req, res, async (canonicalId: string) => {
+            await getUserWrapper(req, res, canonicalId, async (user: IUserV1) => {
+                // TODO: log activity from user
+                await MongoDBSingleton.getInstance()
+
+                const restaurant = await RestaurantV1
+                    .findOne({ _id: req.params.restaurant_id })
+                    .populate('openDuring')
+                    .populate('menu')
+
+                if (restaurant == null) {
+                    res.status(404).send('Restaurant not found')
+                    return
+                }
+
+                res.status(200).send({
+                    _id: restaurant._id,
+                    name: restaurant.name,
+                    englishName: restaurant.englishName,
+                    openDuring: restaurant.openDuring,
+                    address: restaurant.address,
+                    city: restaurant.city,
+                    position: restaurant.position,
+                    menu: restaurant.menu
+                })
+            })
+        })
+    })
+}
