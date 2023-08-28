@@ -244,8 +244,20 @@ export const getRestaurant = async (req: express.Request, res: express.Response)
 
                 const restaurant = await RestaurantV1
                     .findOne({ _id: req.params.restaurant_id })
-                    .populate('openDuring')
-                    .populate('menu')
+                    .populate([
+                        {
+                            path: 'menu',
+                            populate: {
+                                path: 'categories',
+                                populate: {
+                                    path: 'foodItems'
+                                }
+                            }
+                        },
+                        {
+                            path: 'openDuring'
+                        }
+                    ])
 
                 if (restaurant == null) {
                     res.status(404).send('Restaurant not found')
