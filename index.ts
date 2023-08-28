@@ -579,7 +579,7 @@ app.get('/restaurant/:restaurant_id/food/addonCategories', async (req, res) => {
                     return
                 }
 
-                const categories = await FoodItemAddonCategoryV1.find({ restaurant: restaurant._id })
+                const categories = await FoodItemAddonCategoryV1.find({ restaurant: restaurant._id }).populate('addons')
 
                 res.status(200).send(categories)
             })
@@ -713,6 +713,10 @@ app.post('/restaurant/:restaurant_id/food/addonCategory/:category_id/addAddon', 
                         return
                     }
 
+                    if (category.addons.includes(addon._id)) {
+                        res.status(400).send('Addon already in category')
+                        return
+                    }
                     category.addons.push(addon._id)
                     await category.save()
 
