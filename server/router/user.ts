@@ -18,7 +18,7 @@ export const userRouter = router({
     * This will send a SMS OTP to the user's phone number
      **/
     authSMS: t.procedure.input(z.object({
-        phoneNumber: z.string().min(10).max(14).regex(/^\d+$/)
+        phoneNumber: z.string().min(10).max(16).regex(/^\d+$/)
     })).mutation(async ({ input }) => {
         const { requestExists, request } = await getVerifyRequestByPhone(input.phoneNumber)
         if (requestExists && request !== null) {
@@ -39,9 +39,11 @@ export const userRouter = router({
             }
         }
 
+        console.log(`Starting Vonage Verify chain for ${input.phoneNumber}`)
         const res = await vonage.verify.start({
             number: input.phoneNumber,
-            brand: "Goodies"
+            brand: "Goodies",
+            codeLength: 6
         })
         if (res.status === '0') {
             await logNewVerifyRequest({
@@ -84,7 +86,10 @@ export const userRouter = router({
                 success: true
             }
         })
-        return res
+        return {
+            ...res,
+            success: true
+        }
     }),
     /**
      * This is the third step in the auth process, you check if an account exists with this phone number

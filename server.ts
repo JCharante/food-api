@@ -34,7 +34,7 @@ import { expressHandler } from 'trpc-playground/handlers/express'
 
 const app = express()
 
-// app.use(morgan('combined'))
+app.use(morgan('combined'))
 
 const perfObserver = new PerformanceObserver((items) => {
     items.getEntries().forEach((entry) => {
