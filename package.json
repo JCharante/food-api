@@ -1,16 +1,19 @@
 {
   "name": "@goodies-tech/api",
-  "version": "1.0.13",
+  "version": "1.0.22",
   "description": "",
-  "main": "dist/index.ts",
+  "main": "server.ts",
   "files": [
-    "dist/"
+    "controller/",
+    "server.ts",
+    "database.ts",
+    "types.ts"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node-dev server.ts --traceResolution",
     "lint": "npx eslint . | snazzy",
-    "build": "rm -rf dist && mkdir dist && cp types.ts client.ts index.ts dist"
+    "build": "rm -rf dist && mkdir dist && cp server.ts dist"
   },
   "repository": {
     "type": "git",
@@ -20,8 +23,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@trpc/server": "^10.16.0",
     "@types/mongoose": "^5.11.97",
-    "mongoose": "^6.6.5"
+    "eslint-plugin-import": "^2.27.5",
+    "mongoose": "^6.6.5",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",

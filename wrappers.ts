@@ -1,6 +1,7 @@
 import { MongoDBSingleton, RestaurantV1, SessionKeyV1, UserV1 } from './database'
 import { IAssertTypesItemProps, IRestaurantV1, IUserV1 } from './types'
 import express from 'express'
+import { TRPCError } from '@trpc/server'
 
 export const errorWrapper = async (fn: () => Promise<void>): Promise<void> => {
     try {
@@ -53,6 +54,18 @@ export const requireIsRestaurantOwnerWrapper = async (req: express.Request, res:
     }
     await fn(restaurant)
 }
+
+export const requireIsRestaurantOwnerWrapperTRPC = async (user: IUserV1, restaurantID: string) => {
+    await MongoDBSingleton.getInstance()
+    const restaurant = await RestaurantV1.findOne({ _id: restaurantID })
+    if ((restaurant == null) || restaurant.owner.toString() !== user._id.toString()) {
+        throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'User does not have permission to access admin endpoints for this restaurant'
+        })
+    }
+}
+
 export const assertTypesWrapper = async (req: express.Request, res: express.Response, types: IAssertTypesItemProps[], fn: () => Promise<void>): Promise<void> => {
     for (const type of types) {
         if (type.isRequired && req.body[type.field] === undefined) {
