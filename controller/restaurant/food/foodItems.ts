@@ -122,6 +122,10 @@ export const patchFoodItem = async (req: express.Request, res: express.Response)
                             foodItem.addons = req.body.addons
                         }
 
+                        if (req.body.names !== undefined) {
+                            foodItem.names = req.body.names
+                        }
+
                         await foodItem.save()
 
                         res.status(200).send('OK')
